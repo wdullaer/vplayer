@@ -1,0 +1,20 @@
+<!--
+  ~ Copyright (C) 2018 Wouter Dullaert
+  ~
+  ~ This Source Code Form is subject to the terms of the Mozilla Public
+  ~ License, v. 2.0. If a copy of the MPL was not distributed with this
+  ~ file, You can obtain one at http://mozilla.org/MPL/2.0/.
+  -->
+
+<resources>
+    <color name="background_gradient_start">#000000</color>
+    <color name="background_gradient_end">#DDDDDD</color>
+    <color name="fastlane_background">@color/vrt_black</color>
+    <color name="search_opaque">@color/vrt_green</color>
+    <color name="selected_background">@color/vrt_black</color>
+    <color name="selected_text">@color/vrt_green</color>
+    <color name="default_background">#3d3d3d</color>
+    <color name="vrt_green">#5dfc71</color>
+    <color name="vrt_black">#0d0d19</color>
+    <color name="original_blue">#0096a6</color>
+</resources>

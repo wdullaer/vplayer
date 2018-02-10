@@ -1,0 +1,260 @@
+/*
+ * Copyright (C) 2018 Wouter Dullaert
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
+package com.wdullaer.vplayer
+
+import java.util.Timer
+import java.util.TimerTask
+
+import android.graphics.drawable.Drawable
+import android.os.Bundle
+import android.os.Handler
+import android.support.v17.leanback.app.BackgroundManager
+import android.support.v17.leanback.app.BrowseFragment
+import android.support.v17.leanback.widget.ArrayObjectAdapter
+import android.support.v17.leanback.widget.HeaderItem
+import android.support.v17.leanback.widget.ImageCardView
+import android.support.v17.leanback.widget.ListRow
+import android.support.v17.leanback.widget.ListRowPresenter
+import android.support.v17.leanback.widget.Presenter
+import android.support.v4.content.ContextCompat
+import android.util.DisplayMetrics
+import android.util.Log
+import android.view.ViewGroup
+import android.widget.ImageView
+import android.widget.TextView
+
+import com.bumptech.glide.Glide
+import com.bumptech.glide.request.RequestOptions
+import com.bumptech.glide.request.target.SimpleTarget
+import com.bumptech.glide.request.transition.Transition
+import kotlin.properties.Delegates
+
+/**
+ * Loads a grid of cards with movies to browse.
+ */
+class MainFragment : BrowseFragment() {
+
+    private val mHandler = Handler()
+    private lateinit var mRowsAdapter: ArrayObjectAdapter
+    private lateinit var mBackgroundManager: BackgroundManager
+    private var mDefaultBackground: Drawable? = null
+    private lateinit var mMetrics: DisplayMetrics
+    private var mBackgroundTimer: Timer = Timer()
+    private var mBackgroundUri: String? = null
+
+    override fun onActivityCreated(savedInstanceState: Bundle?) {
+        Log.i(TAG, "onCreate")
+        super.onActivityCreated(savedInstanceState)
+
+        prepareBackgroundManager()
+
+        setupUIElements()
+
+        loadRows()
+
+        setupEventListeners()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        Log.d(TAG, "onDestroy: " + mBackgroundTimer.toString())
+        mBackgroundTimer.cancel()
+    }
+
+    private fun prepareBackgroundManager() {
+        mBackgroundManager = BackgroundManager.getInstance(activity)
+        mBackgroundManager.attach(activity.window)
+        mDefaultBackground = ContextCompat.getDrawable(activity, R.drawable.default_background)
+        mMetrics = DisplayMetrics()
+        activity.windowManager.defaultDisplay.getMetrics(mMetrics)
+    }
+
+    private fun setupUIElements() {
+        title = getString(R.string.browse_title)
+        // over title
+        headersState = BrowseFragment.HEADERS_ENABLED
+        isHeadersTransitionOnBackEnabled = true
+
+        // set fastLane (or headers) background color
+        brandColor = ContextCompat.getColor(activity, R.color.fastlane_background)
+        // set search icon color
+        searchAffordanceColor = ContextCompat.getColor(activity, R.color.search_opaque)
+    }
+
+    private fun loadRows() {
+        mRowsAdapter = ArrayObjectAdapter(ListRowPresenter())
+        val cardPresenter = CardPresenter()
+
+        getLandingPage(resources.getString(R.string.default_playlist_title)) {
+            mRowsAdapter.addAll(0, it.map {
+                val listRowAdapter = ArrayObjectAdapter(cardPresenter)
+                listRowAdapter.addAll(0, it.data)
+                val header = HeaderItem(it.title)
+                ListRow(header, listRowAdapter)
+            })
+            mRowsAdapter.notifyArrayItemRangeChanged(0, it.size)
+            this.setSelectedPosition(0, true)
+        }
+
+        val gridHeader = HeaderItem(999L, "Preferences")
+
+        val mGridPresenter = GridItemPresenter()
+        val gridRowAdapter = ArrayObjectAdapter(mGridPresenter)
+        gridRowAdapter.add(MenuCard(
+                resources.getString(R.string.account_settings),
+                R.drawable.ic_person_black_24dp,
+                activity::startSettingsActivity
+        ))
+        mRowsAdapter.add(ListRow(gridHeader, gridRowAdapter))
+
+        getCategories {
+            val categoryHeader = HeaderItem(998L, "Categories")
+            val categoryRowAdapter = ArrayObjectAdapter(cardPresenter)
+            categoryRowAdapter.addAll(0, it)
+            categoryRowAdapter.notifyArrayItemRangeChanged(0, it.size)
+            if (mRowsAdapter.size() == 0) {
+                mRowsAdapter.add(ListRow(categoryHeader, categoryRowAdapter))
+            } else {
+                mRowsAdapter.add(mRowsAdapter.size() - 1, ListRow(categoryHeader, categoryRowAdapter))
+            }
+        }
+
+        adapter = mRowsAdapter
+    }
+
+    private fun setupEventListeners() {
+        setOnSearchClickedListener { activity.startSearchActivity() }
+
+        setOnItemViewSelectedListener { _, item, _, _ ->
+            if (item is Video) {
+                mBackgroundUri = item.backgroundImageUrl
+                startBackgroundTimer()
+            }
+        }
+
+        setOnItemViewClickedListener { itemViewHolder, item, _, _ ->
+            Log.d(TAG, "Item: $item")
+            when (item) {
+                is Video -> {
+                    activity.startDetailsActivity(item, (itemViewHolder.view as ImageCardView).mainImageView)
+                }
+                is Category -> {
+                    activity.startGridActivity(item)
+                }
+                is MenuCard -> {
+                    item.onClickHandler()
+                }
+            }
+        }
+    }
+
+    private fun updateBackground(uri: String?) {
+        val width = mMetrics.widthPixels
+        val height = mMetrics.heightPixels
+        val glideOptions = RequestOptions()
+                .centerCrop()
+                .error(mDefaultBackground)
+        Glide.with(activity)
+                .load(uri)
+                .apply(glideOptions)
+                .into<SimpleTarget<Drawable>>(
+                        object : SimpleTarget<Drawable>(width, height) {
+                            override fun onResourceReady(resource: Drawable,
+                                                         glideAnimation: Transition<in Drawable>?) {
+                                mBackgroundManager.drawable = resource
+                            }
+                        })
+        mBackgroundTimer.cancel()
+    }
+
+    private fun startBackgroundTimer() {
+        mBackgroundTimer.cancel()
+        mBackgroundTimer = Timer()
+        val timerTask = object : TimerTask() {
+            override fun run() {
+                mHandler.post { updateBackground(mBackgroundUri) }
+            }
+        }
+        mBackgroundTimer.schedule(timerTask, BACKGROUND_UPDATE_DELAY.toLong())
+    }
+
+    private inner class GridItemPresenter : Presenter() {
+        private var mDefaultCardImage: Drawable? = null
+        private var sSelectedBackgroundColor: Int by Delegates.notNull()
+        private var sDefaultBackgroundColor: Int by Delegates.notNull()
+        private var sDefaultTextColor: Int by Delegates.notNull()
+        private var sSelectedTextColor: Int by Delegates.notNull()
+
+        override fun onCreateViewHolder(parent: ViewGroup): Presenter.ViewHolder {
+            sDefaultBackgroundColor = ContextCompat.getColor(parent.context, R.color.default_background)
+            sSelectedBackgroundColor =
+                    ContextCompat.getColor(parent.context, R.color.selected_background)
+            mDefaultCardImage = ContextCompat.getDrawable(parent.context, R.drawable.movie)
+            sSelectedTextColor = ContextCompat.getColor(parent.context, R.color.selected_text)
+            sDefaultTextColor = ContextCompat.getColor(parent.context, R.color.lb_basic_card_title_text_color)
+
+            val view = object : ImageCardView(parent.context) {
+                override fun setSelected(selected: Boolean) {
+                    updateCardBackgroundColor(this, selected)
+                    super.setSelected(selected)
+                }
+            }
+
+            view.layoutParams = ViewGroup.LayoutParams(GRID_ITEM_WIDTH, GRID_ITEM_HEIGHT)
+            view.isFocusable = true
+            view.isFocusableInTouchMode = true
+            view.setMainImageDimensions(GRID_ITEM_WIDTH, GRID_ITEM_WIDTH)
+            view.setMainImageScaleType(ImageView.ScaleType.FIT_CENTER)
+            view.setBackgroundColor(ContextCompat.getColor(activity, R.color.default_background))
+            return Presenter.ViewHolder(view)
+        }
+
+        override fun onBindViewHolder(viewHolder: Presenter.ViewHolder, item: Any) {
+            val card = viewHolder.view as ImageCardView
+            card.titleText = (item as MenuCard).label
+            card.mainImage = activity.getDrawable(item.imageRes)
+        }
+
+        override fun onUnbindViewHolder(viewHolder: Presenter.ViewHolder) {
+            Log.d(TAG, "onUnbindViewHolder")
+            val cardView = viewHolder.view as ImageCardView
+            // Remove references to images so that the garbage collector can free up memory
+            cardView.badgeImage = null
+            cardView.mainImage = null
+        }
+
+        private fun updateCardBackgroundColor(view: ImageCardView, selected: Boolean) {
+            val color = if (selected) sSelectedBackgroundColor else sDefaultBackgroundColor
+            // Both background colors should be set because the view's background is temporarily visible
+            // during animations.
+            view.setBackgroundColor(color)
+            view.setInfoAreaBackgroundColor(color)
+
+            val textColor = if (selected) sSelectedTextColor else sDefaultTextColor
+            view.findViewById<TextView>(R.id.title_text).setTextColor(textColor)
+        }
+    }
+
+    companion object {
+        private const val TAG = "MainFragment"
+
+        private const val BACKGROUND_UPDATE_DELAY = 300
+        // TODO: experiment with grid sizes
+        private const val GRID_ITEM_WIDTH = 200
+        private const val GRID_ITEM_HEIGHT = 287
+    }
+}
+
+// TODO: render shortDescription in cards
+
+data class MenuCard (
+        val label : String,
+        val imageRes: Int,
+        val onClickHandler: () -> Unit
+)

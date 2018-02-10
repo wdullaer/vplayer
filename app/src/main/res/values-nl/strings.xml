@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (C) 2018 Wouter Dullaert
+  ~
+  ~ This Source Code Form is subject to the terms of the Mozilla Public
+  ~ License, v. 2.0. If a copy of the MPL was not distributed with this
+  ~ file, You can obtain one at http://mozilla.org/MPL/2.0/.
+  -->
+
+<resources>
+    <string name="related_movies">Gerelateerde Videos</string>
+    <string name="play_video_1">Bekijk video</string>
+    <string name="movie">Film</string>
+    <string name="video_error_unknown_error">De video kon niet geladen worden</string>
+    <string name="error_fragment_message">Er deed zich een fout voor</string>
+    <string name="dismiss_error">Ga terug</string>
+    <string name="video_error_server_inaccessible">De media server kon niet gecontacteerd worden</string>
+    <string name="video_error_media_load_timeout">Het laden van de media duurde te lang</string>
+    <string name="account_settings">Account</string>
+    <string name="pref_username_title">Gebruikersnaam</string>
+    <string name="pref_password_title">Paswoord</string>
+    <string name="pref_login_title">VRT Account</string>
+    <string name="authentication_screen_title">Aanmelden</string>
+    <string name="authentication_screen_description">Gelieve je gebruikersnaam en paswoord voor VRT NU in te geven</string>
+    <string name="pref_action_login">Aanmelden</string>
+    <string name="toast_login_successful">Proficiat, U bent aangemeld bij VRT NU!</string>
+    <string name="default_playlist_title">Uitgelicht</string>
+    <string name="search_results">Zoekresultaten voor</string>
+</resources>
