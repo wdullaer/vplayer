@@ -18,7 +18,7 @@ import android.support.v4.app.FragmentActivity
  */
 abstract class LeanbackActivity : FragmentActivity() {
     override fun onSearchRequested(): Boolean {
-        startActivity(Intent(this, SearchActivity::class.java))
+        startSearchActivity()
         return true
     }
 }
