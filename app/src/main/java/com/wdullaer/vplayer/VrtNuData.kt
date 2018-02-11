@@ -106,12 +106,13 @@ fun getVideoDetails(video : Video, cookie : String = "", callback : (Video) -> U
                     val json = result.get().obj()
                     // TODO: validate payload before parsing
                     // TODO: parse related videos
+                    val posterImage = toAbsoluteUrl(json.optString("posterImageUrl"))
                     callback(Video(
                             id = video.id,
                             title = json.getString("title"),
                             shortDescription = video.shortDescription,
                             description = json.getString("description"),
-                            backgroundImageUrl = video.backgroundImageUrl,
+                            backgroundImageUrl = if (posterImage != "") posterImage else video.backgroundImageUrl,
                             cardImageUrl =  video.cardImageUrl,
                             detailsUrl = video.detailsUrl,
                             category = video.category,
@@ -186,7 +187,11 @@ fun getVideoDetails(video : Video, cookie : String = "", callback : (Video) -> U
                 video.title = info.getString("title")
                 video.shortDescription = info.getString("shortDescription")
                 video.description = sanitizeText(info.getString("description"))
-                video.backgroundImageUrl = toAbsoluteUrl(info.getString("assetImage"))
+                video.backgroundImageUrl = if (info.getString("assetImage") == "") {
+                    toAbsoluteUrl(info.getString("programImageUrl"))
+                } else {
+                    toAbsoluteUrl(info.getString("assetImage"))
+                }
                 val newDetailsUrl = toAbsoluteUrl(info.getString("url"))
                 video.detailsUrl = newDetailsUrl
                 fetchRelatedVideos(newDetailsUrl)
@@ -325,6 +330,9 @@ private fun toAbsoluteUrl(url : String?) : String {
         url.startsWith("https://") -> url
         url.startsWith("//") -> "https:$url"
         url.startsWith("/") -> "$VRT_BASE_PATH$url"
-        else -> url
+        else -> {
+            Log.w("VrtNuData", "$url does not appear to be a url")
+            url
+        }
     }
 }
