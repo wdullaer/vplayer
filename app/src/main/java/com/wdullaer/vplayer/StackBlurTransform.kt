@@ -11,35 +11,31 @@ package com.wdullaer.vplayer
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
-import android.graphics.Color
 import android.graphics.Paint
-import android.graphics.PorterDuff
-import android.graphics.PorterDuffColorFilter
-import android.support.annotation.ColorRes
+import android.util.Log
 import com.bumptech.glide.load.Transformation
 
 import com.bumptech.glide.load.engine.bitmap_recycle.BitmapPool
 import com.bumptech.glide.load.resource.bitmap.BitmapResource
-import com.bumptech.glide.request.target.Target
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.Resource
-import com.bumptech.glide.util.Util.
+import com.bumptech.glide.util.Util
 import java.security.MessageDigest
 
 
 /**
  * Glide transformation class for blur bitmap
+ * Based on: https://gist.github.com/stepango/040bc2a47595c9e7121e
  */
-class BlurTransform(private val blurRadius: Int = DEFAULT_BLUR_RADIUS, @param:ColorRes @field:ColorRes
-private val foregroundColor: Int) : Transformation<Bitmap> {
-    private var scaleFactor = DEFAULT_SCALE_FACTOR
-
+class StackBlurTransform(private val blurRadius: Int = DEFAULT_BLUR_RADIUS,
+                         private var scaleFactor: Int = DEFAULT_SCALE_FACTOR) : Transformation<Bitmap> {
     val id: String
-        get() = "$TRANSFORMATION_ID(blurRadius = $blurRadius, foreground = $foregroundColor)"
+        get() = "$TRANSFORMATION_ID(blurRadius = $blurRadius, scaleFactor = $scaleFactor)"
 
+    @Suppress("unused")
     constructor() : this(DEFAULT_BLUR_RADIUS)
 
-    constructor(blurRadius: Int) : this(blurRadius, DEFAULT_FOREGROUND)
+    constructor(blurRadius: Int): this(blurRadius, DEFAULT_SCALE_FACTOR)
 
     init {
         setScaleFactor(DEFAULT_SCALE_FACTOR)
@@ -54,17 +50,17 @@ private val foregroundColor: Int) : Transformation<Bitmap> {
         }
         val bitmapPool = Glide.get(context).bitmapPool
         val toTransform = resource.get()
-        val targetWidth = if (outWidth == Target.SIZE_ORIGINAL) toTransform.width else outWidth
-        val targetHeight = if (outHeight == Target.SIZE_ORIGINAL) toTransform.height else outHeight
-        val transformed = transform(context.applicationContext, bitmapPool, toTransform, targetWidth, targetHeight)
+        // val targetWidth = if (outWidth == Target.SIZE_ORIGINAL) toTransform.width else outWidth
+        // val targetHeight = if (outHeight == Target.SIZE_ORIGINAL) toTransform.height else outHeight
+        val transformed = transform(context.applicationContext, bitmapPool, toTransform)
 
-        val result: Resource<Bitmap>
-        result = if (toTransform == transformed) {
+        return if (toTransform == transformed) {
+            Log.d("StackBlurTransform", "Bitmap wasn't changed")
             resource
         } else {
-            BitmapResource.obtain(transformed, bitmapPool)
+            Log.d("StackBlurTransform", "Converting bitmap to a resource")
+            BitmapResource.obtain(transformed, bitmapPool) as Resource<Bitmap>
         }
-        return result
     }
 
     /**
@@ -78,7 +74,7 @@ private val foregroundColor: Int) : Transformation<Bitmap> {
         this.scaleFactor = scaleFactor
     }
 
-    fun transform(context: Context, pool: BitmapPool, toTransform: Bitmap, outWidth: Int, outHeight: Int): Bitmap? {
+    private fun transform(context: Context, pool: BitmapPool, toTransform: Bitmap): Bitmap? {
         val deviceBlurRadius = (blurRadius * context.resources.displayMetrics.density).toInt()
 
         var bitmap = pool.get(
@@ -86,30 +82,16 @@ private val foregroundColor: Int) : Transformation<Bitmap> {
                 toTransform.height / scaleFactor,
                 Bitmap.Config.ARGB_8888
         )
+        val canvas = Canvas(bitmap)
+        canvas.scale(1 / scaleFactor.toFloat(), 1 / scaleFactor.toFloat())
         val paint = Paint()
         paint.flags = Paint.FILTER_BITMAP_FLAG
-        Canvas(bitmap).drawBitmap(bitmap, 0f, 0f, paint)
+        canvas.drawBitmap(toTransform, 0f, 0f, paint)
 
         //Add blur to bitmap
-        bitmap = getBlurredBitmapFastBlur(bitmap, deviceBlurRadius / scaleFactor)
-
-        //Add foreground color if needed
-        if (foregroundColor > 0) {
-            addForegroundColor(context, bitmap, foregroundColor)
-        }
+        bitmap = getBlurredBitmap(bitmap, deviceBlurRadius / scaleFactor)
 
         return bitmap
-    }
-
-    private fun addForegroundColor(context: Context, bitmap: Bitmap, @ColorRes foregroundColor: Int) {
-        val canvas = Canvas(bitmap)
-        val paint = Paint()
-        paint.isAntiAlias = true
-        paint.colorFilter = PorterDuffColorFilter(
-                context.resources.getColor(foregroundColor),
-                PorterDuff.Mode.SRC_ATOP
-        )
-        canvas.drawBitmap(bitmap, 0f, 0f, paint)
     }
 
     companion object {
@@ -117,9 +99,9 @@ private val foregroundColor: Int) : Transformation<Bitmap> {
         const val TRANSFORMATION_ID = "com.wdullaer.vplayer.StackBlurTransform"
         const val DEFAULT_SCALE_FACTOR = 5
         private const val DEFAULT_BLUR_RADIUS = 21
-        private const val DEFAULT_FOREGROUND = Color.WHITE
 
-        fun getBlurredBitmapFastBlur(sentBitmap: Bitmap, radius: Int): Bitmap {
+        fun getBlurredBitmap(sentBitmap: Bitmap, radius: Int): Bitmap {
+            Log.d("vrtnu.StackBlurTrans", "Blurring bitmap")
 
             // Stack Blur v1.0 from
             // http://www.quasimondo.com/StackBlurForCanvas/StackBlurDemo.html
@@ -401,7 +383,7 @@ private val foregroundColor: Int) : Transformation<Bitmap> {
     }
 
     override fun equals(other: Any?): Boolean {
-        if (other is BlurTransform) return other.id == this.id
+        if (other is StackBlurTransform) return other.id == this.id
         return false
     }
 

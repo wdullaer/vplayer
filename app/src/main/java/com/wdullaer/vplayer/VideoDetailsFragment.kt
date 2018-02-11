@@ -10,10 +10,9 @@ package com.wdullaer.vplayer
 
 import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.drawable.Drawable
 import android.os.Bundle
+import android.support.v17.leanback.app.BackgroundManager
 import android.support.v17.leanback.app.DetailsFragment
-import android.support.v17.leanback.app.DetailsFragmentBackgroundController
 import android.support.v17.leanback.widget.Action
 import android.support.v17.leanback.widget.ArrayObjectAdapter
 import android.support.v17.leanback.widget.ClassPresenterSelector
@@ -25,6 +24,7 @@ import android.support.v17.leanback.widget.ImageCardView
 import android.support.v17.leanback.widget.ListRow
 import android.support.v17.leanback.widget.ListRowPresenter
 import android.support.v4.content.ContextCompat
+import android.util.DisplayMetrics
 import android.util.Log
 import android.widget.Toast
 
@@ -41,23 +41,20 @@ import com.bumptech.glide.request.transition.Transition
 class VideoDetailsFragment : DetailsFragment() {
 
     private lateinit var mSelectedVideo: Video
+    private lateinit var backgroundManager : BackgroundManager
+    private val windowMetrics = DisplayMetrics()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.d(TAG, "onCreate DetailsFragment")
         super.onCreate(savedInstanceState)
 
+        backgroundManager = BackgroundManager.getInstance(activity)
+        backgroundManager.attach(activity.window)
+        activity.windowManager.defaultDisplay.getMetrics(windowMetrics)
+
         mSelectedVideo = activity.intent.getSerializableExtra(DetailsActivity.VIDEO) as Video
         val presenterSelector = ClassPresenterSelector()
         val arrayAdapter = ArrayObjectAdapter(presenterSelector)
-
-        val cookie = activity.getSharedPreferences(AUTHENTICATION_PREFERENCE_ROOT, Context.MODE_PRIVATE)
-                .getString(activity.getString(R.string.pref_cookie_key), "")
-        enrichVideo(mSelectedVideo, cookie) {
-            val detailsBackground = DetailsFragmentBackgroundController(this)
-            initializeBackground(mSelectedVideo, arrayAdapter, detailsBackground)
-            updateRelatedMoviesListRow(arrayAdapter)
-            arrayAdapter.notifyArrayItemRangeChanged(0, arrayAdapter.size())
-        }
 
         setupDetailsOverviewRow(arrayAdapter)
         setupDetailsOverviewRowPresenter(presenterSelector)
@@ -73,22 +70,31 @@ class VideoDetailsFragment : DetailsFragment() {
                 )
             }
         }
+
+        val cookie = activity.getSharedPreferences(AUTHENTICATION_PREFERENCE_ROOT, Context.MODE_PRIVATE)
+                .getString(activity.getString(R.string.pref_cookie_key), "")
+        enrichVideo(mSelectedVideo, cookie) {
+            initializeBackground(mSelectedVideo)
+            updateRelatedMoviesListRow(arrayAdapter)
+            arrayAdapter.notifyArrayItemRangeChanged(0, arrayAdapter.size())
+        }
     }
 
-    private fun initializeBackground(video: Video, arrayAdapter : ArrayObjectAdapter, background : DetailsFragmentBackgroundController) {
-        background.enableParallax()
+    private fun initializeBackground(video: Video) {
+        val width = windowMetrics.widthPixels
+        val height = windowMetrics.heightPixels
         val glideOptions = RequestOptions()
                 .centerCrop()
+                .transform(StackBlurTransform(50, 1))
                 .error(R.drawable.default_background)
-        Glide.with(activity)
+        Glide.with(this)
                 .asBitmap()
                 .load(video.backgroundImageUrl)
                 .apply(glideOptions)
-                .into<SimpleTarget<Bitmap>>(object : SimpleTarget<Bitmap>() {
+                .into<SimpleTarget<Bitmap>>(object : SimpleTarget<Bitmap>(width, height) {
                     override fun onResourceReady(bitmap: Bitmap,
                                                  glideAnimation: Transition<in Bitmap>?) {
-                        background.coverBitmap = bitmap
-                        arrayAdapter.notifyArrayItemRangeChanged(0, adapter.size())
+                        backgroundManager.setBitmap(bitmap)
                     }
                 })
     }
@@ -101,16 +107,18 @@ class VideoDetailsFragment : DetailsFragment() {
         val height = convertDpToPixel(activity, DETAIL_THUMB_HEIGHT)
         val glideOptions = RequestOptions()
                 .centerCrop()
+                .dontAnimate()
                 .error(R.drawable.default_background)
-        Glide.with(activity)
+        Glide.with(this)
+                .asBitmap()
                 .load(mSelectedVideo.cardImageUrl)
                 .apply(glideOptions)
-                .into<SimpleTarget<Drawable>>(object : SimpleTarget<Drawable>(width, height) {
-                    override fun onResourceReady(resource: Drawable,
-                                                 glideAnimation: Transition<in Drawable>?) {
+                .into<SimpleTarget<Bitmap>>(object : SimpleTarget<Bitmap>(width, height) {
+                    override fun onResourceReady(resource: Bitmap,
+                                                 glideAnimation: Transition<in Bitmap>?) {
                         Log.d(TAG, "details overview card image url ready: " + resource)
-                        row.imageDrawable = resource
-                        arrayAdapter.notifyArrayItemRangeChanged(0, adapter.size())
+                        row.setImageBitmap(activity, resource)
+                        startEntranceTransition()
                     }
                 })
 
@@ -135,7 +143,8 @@ class VideoDetailsFragment : DetailsFragment() {
         sharedElementHelper.setSharedElementEnterTransition(
                 activity, DetailsActivity.SHARED_ELEMENT_NAME)
         detailsPresenter.setListener(sharedElementHelper)
-        detailsPresenter.isParticipatingEntranceTransition = true
+        detailsPresenter.isParticipatingEntranceTransition = false
+        prepareEntranceTransition()
 
         detailsPresenter.setOnActionClickedListener {
             // TODO: check that we have a videoUrl before launching playback

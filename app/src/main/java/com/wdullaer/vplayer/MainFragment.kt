@@ -8,12 +8,11 @@
 
 package com.wdullaer.vplayer
 
-import java.util.Timer
-import java.util.TimerTask
-
+import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
+import java.util.Timer
+
 import android.os.Bundle
-import android.os.Handler
 import android.support.v17.leanback.app.BackgroundManager
 import android.support.v17.leanback.app.BrowseFragment
 import android.support.v17.leanback.widget.ArrayObjectAdapter
@@ -34,17 +33,17 @@ import com.bumptech.glide.request.RequestOptions
 import com.bumptech.glide.request.target.SimpleTarget
 import com.bumptech.glide.request.transition.Transition
 import kotlin.properties.Delegates
+import kotlin.concurrent.schedule
 
 /**
  * Loads a grid of cards with movies to browse.
  */
 class MainFragment : BrowseFragment() {
 
-    private val mHandler = Handler()
     private lateinit var mRowsAdapter: ArrayObjectAdapter
     private lateinit var mBackgroundManager: BackgroundManager
     private var mDefaultBackground: Drawable? = null
-    private lateinit var mMetrics: DisplayMetrics
+    private val mMetrics = DisplayMetrics()
     private var mBackgroundTimer: Timer = Timer()
     private var mBackgroundUri: String? = null
 
@@ -71,7 +70,6 @@ class MainFragment : BrowseFragment() {
         mBackgroundManager = BackgroundManager.getInstance(activity)
         mBackgroundManager.attach(activity.window)
         mDefaultBackground = ContextCompat.getDrawable(activity, R.drawable.default_background)
-        mMetrics = DisplayMetrics()
         activity.windowManager.defaultDisplay.getMetrics(mMetrics)
     }
 
@@ -155,33 +153,33 @@ class MainFragment : BrowseFragment() {
     }
 
     private fun updateBackground(uri: String?) {
+        if (uri == null) {
+            return mBackgroundTimer.cancel()
+        }
         val width = mMetrics.widthPixels
         val height = mMetrics.heightPixels
         val glideOptions = RequestOptions()
                 .centerCrop()
                 .error(mDefaultBackground)
-        Glide.with(activity)
+        Glide.with(this)
+                .asBitmap()
                 .load(uri)
                 .apply(glideOptions)
-                .into<SimpleTarget<Drawable>>(
-                        object : SimpleTarget<Drawable>(width, height) {
-                            override fun onResourceReady(resource: Drawable,
-                                                         glideAnimation: Transition<in Drawable>?) {
-                                mBackgroundManager.drawable = resource
-                            }
-                        })
+                .into<SimpleTarget<Bitmap>>(object : SimpleTarget<Bitmap>(width, height) {
+                    override fun onResourceReady(bitmap: Bitmap,
+                                                 glideAnimation: Transition<in Bitmap>?) {
+                        mBackgroundManager.setBitmap(bitmap)
+                    }
+                })
         mBackgroundTimer.cancel()
     }
 
     private fun startBackgroundTimer() {
         mBackgroundTimer.cancel()
         mBackgroundTimer = Timer()
-        val timerTask = object : TimerTask() {
-            override fun run() {
-                mHandler.post { updateBackground(mBackgroundUri) }
-            }
+        mBackgroundTimer.schedule(BACKGROUND_UPDATE_DELAY) {
+            updateBackground(mBackgroundUri)
         }
-        mBackgroundTimer.schedule(timerTask, BACKGROUND_UPDATE_DELAY.toLong())
     }
 
     private inner class GridItemPresenter : Presenter() {
@@ -244,7 +242,7 @@ class MainFragment : BrowseFragment() {
     companion object {
         private const val TAG = "MainFragment"
 
-        private const val BACKGROUND_UPDATE_DELAY = 300
+        private const val BACKGROUND_UPDATE_DELAY = 300L
         // TODO: experiment with grid sizes
         private const val GRID_ITEM_WIDTH = 200
         private const val GRID_ITEM_HEIGHT = 287
