@@ -36,7 +36,6 @@ import com.bumptech.glide.request.transition.Transition
 /**
  * A wrapper fragment for leanback details screens.
  * It shows a detailed view of video and its metadata plus related videos.
- * TODO: ensure related videos are visible in the initial render
  */
 class VideoDetailsFragment : DetailsFragment() {
 
@@ -70,17 +69,26 @@ class VideoDetailsFragment : DetailsFragment() {
                 )
             }
         }
+        setOnSearchClickedListener { activity.startSearchActivity() }
+        searchAffordanceColor = ContextCompat.getColor(activity, R.color.search_opaque)
 
         val cookie = activity.getSharedPreferences(AUTHENTICATION_PREFERENCE_ROOT, Context.MODE_PRIVATE)
                 .getString(activity.getString(R.string.pref_cookie_key), "")
         enrichVideo(mSelectedVideo, cookie) {
-            initializeBackground(mSelectedVideo)
+            updateBackground(mSelectedVideo)
             updateRelatedMoviesListRow(arrayAdapter)
             arrayAdapter.notifyArrayItemRangeChanged(0, arrayAdapter.size())
         }
     }
 
-    private fun initializeBackground(video: Video) {
+    override fun onResume() {
+        super.onResume()
+        // Android doesn't seem to remember the background when coming back from another activity
+        // So let's explicitly make sure it's showing
+        updateBackground(mSelectedVideo)
+    }
+
+    private fun updateBackground(video: Video) {
         val width = windowMetrics.widthPixels
         val height = windowMetrics.heightPixels
         val glideOptions = RequestOptions()

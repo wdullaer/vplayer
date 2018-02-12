@@ -295,7 +295,7 @@ private fun parsePlaylist (doc : Element) : Playlist {
         ?: "Playlist"
     }
     return Playlist(
-            title = getTitle(doc),
+            title = getTitle(doc).capitalize(),
             data = doc.select("li.vrtlist__item").map { parseVideo(it) }
     )
 }
