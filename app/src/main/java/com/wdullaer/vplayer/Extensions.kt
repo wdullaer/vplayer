@@ -136,8 +136,8 @@ fun <T> JSONArray.map(transform : (Any) -> T) : List<T> {
             .map { transform(this.get(it)) }
 }
 
-fun convertDpToPixel(context: Context, dp: Int): Int {
-    val density = context.applicationContext.resources.displayMetrics.density
+fun Context.convertDpToPixel(dp: Int) : Int {
+    val density = this.applicationContext.resources.displayMetrics.density
     return Math.round(dp.toFloat() * density)
 }
 

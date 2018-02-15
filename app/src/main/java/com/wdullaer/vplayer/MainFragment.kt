@@ -243,7 +243,7 @@ class MainFragment : BrowseFragment() {
         private const val TAG = "MainFragment"
 
         private const val BACKGROUND_UPDATE_DELAY = 300L
-        // TODO: experiment with grid sizes
+        // TODO: experiment with grid sizes and turn them into dimen resources
         private const val GRID_ITEM_WIDTH = 200
         private const val GRID_ITEM_HEIGHT = 287
     }
