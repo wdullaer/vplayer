@@ -82,7 +82,11 @@ class CardPresenter : Presenter() {
         image?.let {
             cardView.titleText = title
             cardView.contentText = content
-            cardView.setMainImageDimensions(CARD_WIDTH, CARD_HEIGHT)
+            val res = viewHolder.view.resources
+            cardView.setMainImageDimensions(
+                    res.getDimensionPixelOffset(R.dimen.image_card_width),
+                    res.getDimensionPixelOffset(R.dimen.image_card_height)
+            )
             val glideOptions = RequestOptions()
                     .centerCrop()
                     .error(mDefaultCardImage)
@@ -114,8 +118,5 @@ class CardPresenter : Presenter() {
 
     companion object {
         private const val TAG = "CardPresenter"
-
-        private const val CARD_WIDTH = 313
-        private const val CARD_HEIGHT = 176
     }
 }

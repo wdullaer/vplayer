@@ -108,8 +108,8 @@ class VideoDetailsFragment : DetailsFragment() {
         Log.d(TAG, "doInBackground: " + mSelectedVideo.toString())
         val row = DetailsOverviewRow(mSelectedVideo)
         row.imageDrawable = ContextCompat.getDrawable(activity, R.drawable.default_background)
-        val width = activity.convertDpToPixel(DETAIL_THUMB_WIDTH)
-        val height = activity.convertDpToPixel(DETAIL_THUMB_HEIGHT)
+        val width = activity.resources.getDimensionPixelSize(R.dimen.details_thumb_width)
+        val height = activity.resources.getDimensionPixelSize(R.dimen.details_thumb_heigth)
         val glideOptions = RequestOptions()
                 .fitCenter()
                 .dontAnimate()
@@ -150,37 +150,36 @@ class VideoDetailsFragment : DetailsFragment() {
 
             // This animates the logo when scrolling down in the detailspresenter
             override fun onLayoutLogo(viewHolder: ViewHolder?, oldState: Int, logoChanged: Boolean) {
-                if (viewHolder == null) return
+                viewHolder?.logoViewHolder?.view?.let {
+                    val lp = it.layoutParams as ViewGroup.MarginLayoutParams
+                    lp.marginStart = it.resources.getDimensionPixelSize(
+                            android.support.v17.leanback.R.dimen.lb_details_v2_logo_margin_start
+                    )
+                    lp.topMargin = it.resources.getDimensionPixelSize(
+                            android.support.v17.leanback.R.dimen.lb_details_v2_blank_height
+                    ) - lp.height / 2
+                    val offset = it.resources.getDimensionPixelSize(
+                            android.support.v17.leanback.R.dimen.lb_details_v2_actions_height
+                    ) + it.resources.getDimensionPixelSize(
+                            android.support.v17.leanback.R.dimen.lb_details_v2_description_margin_top
+                    ) + (lp.height / 2)
 
-                val v = viewHolder.logoViewHolder?.view
-                val lp = v?.layoutParams as ViewGroup.MarginLayoutParams
-                lp.marginStart = v.resources.getDimensionPixelSize(
-                        android.support.v17.leanback.R.dimen.lb_details_v2_logo_margin_start
-                )
-                lp.topMargin = v.resources.getDimensionPixelSize(
-                        android.support.v17.leanback.R.dimen.lb_details_v2_blank_height
-                ) - lp.height / 2
-                val offset = v.resources.getDimensionPixelSize(
-                        android.support.v17.leanback.R.dimen.lb_details_v2_actions_height
-                ) + v.resources.getDimensionPixelSize(
-                        android.support.v17.leanback.R.dimen.lb_details_v2_description_margin_top
-                ) + (lp.height / 2)
+                    when (viewHolder.state) {
+                        STATE_SMALL -> lp.topMargin = 0
+                        STATE_HALF -> {
+                            if (previousState == STATE_FULL) it.animate().translationYBy(offset.toFloat())
+                        }
+                        STATE_FULL -> {
+                            if (previousState == STATE_HALF) it.animate().translationYBy(-offset.toFloat())
+                        }
+                        else -> {
+                            if (previousState == STATE_HALF) it.animate().translationYBy(-offset.toFloat())
+                        }
+                    }
 
-                when (viewHolder.state) {
-                    STATE_SMALL -> lp.topMargin = 0
-                    STATE_HALF -> {
-                        if (previousState == STATE_FULL) v.animate().translationYBy(offset.toFloat())
-                    }
-                    STATE_FULL -> {
-                        if (previousState == STATE_HALF) v.animate().translationYBy(-offset.toFloat())
-                    }
-                    else -> {
-                        if (previousState == STATE_HALF) v.animate().translationYBy(-offset.toFloat())
-                    }
+                    previousState = viewHolder.state
+                    it.layoutParams = lp
                 }
-
-                previousState = viewHolder.state
-                v.layoutParams = lp
             }
         }
         detailsPresenter.backgroundColor =
@@ -189,7 +188,9 @@ class VideoDetailsFragment : DetailsFragment() {
         // Hook up transition element.
         val sharedElementHelper = FullWidthDetailsOverviewSharedElementHelper()
         sharedElementHelper.setSharedElementEnterTransition(
-                activity, DetailsActivity.SHARED_ELEMENT_NAME)
+                activity,
+                DetailsActivity.SHARED_ELEMENT_NAME
+        )
         detailsPresenter.setListener(sharedElementHelper)
         detailsPresenter.isParticipatingEntranceTransition = false
         prepareEntranceTransition()
@@ -227,10 +228,6 @@ class VideoDetailsFragment : DetailsFragment() {
         private const val TAG = "VideoDetailsFragment"
 
         private const val ACTION_PLAY = 1L
-
-        // TODO: Convert these into dimen resources
-        private const val DETAIL_THUMB_WIDTH = 274
-        private const val DETAIL_THUMB_HEIGHT = 154
     }
 
     // This class ensures that the animation of the thumb works every time
@@ -239,8 +236,8 @@ class VideoDetailsFragment : DetailsFragment() {
             val imageView = LayoutInflater.from(parent.context)
                     .inflate(R.layout.lb_fullwidth_details_overview_logo, parent, false) as ImageView
 
-            val width = parent.context.convertDpToPixel(DETAIL_THUMB_WIDTH)
-            val height = parent.context.convertDpToPixel(DETAIL_THUMB_HEIGHT)
+            val width = parent.context.resources.getDimensionPixelSize(R.dimen.details_thumb_width)
+            val height = parent.context.resources.getDimensionPixelSize(R.dimen.details_thumb_heigth)
             imageView.layoutParams = ViewGroup.MarginLayoutParams(width, height)
             imageView.scaleType = ImageView.ScaleType.CENTER_CROP
 

@@ -204,10 +204,12 @@ class MainFragment : BrowseFragment() {
                 }
             }
 
-            view.layoutParams = ViewGroup.LayoutParams(GRID_ITEM_WIDTH, GRID_ITEM_HEIGHT)
+            val width = activity.resources.getDimensionPixelSize(R.dimen.icon_card_width)
+            val height = activity.resources.getDimensionPixelSize(R.dimen.icon_card_height)
+            view.layoutParams = ViewGroup.LayoutParams(width, height)
             view.isFocusable = true
             view.isFocusableInTouchMode = true
-            view.setMainImageDimensions(GRID_ITEM_WIDTH, GRID_ITEM_WIDTH)
+            view.setMainImageDimensions(width, width)
             view.setMainImageScaleType(ImageView.ScaleType.FIT_CENTER)
             view.setBackgroundColor(ContextCompat.getColor(activity, R.color.default_background))
             return Presenter.ViewHolder(view)
@@ -243,9 +245,6 @@ class MainFragment : BrowseFragment() {
         private const val TAG = "MainFragment"
 
         private const val BACKGROUND_UPDATE_DELAY = 300L
-        // TODO: experiment with grid sizes and turn them into dimen resources
-        private const val GRID_ITEM_WIDTH = 200
-        private const val GRID_ITEM_HEIGHT = 287
     }
 }
 
