@@ -13,6 +13,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
+import android.os.Bundle
 import android.support.v4.app.ActivityOptionsCompat
 import android.view.View
 import com.google.android.exoplayer2.util.Util
@@ -74,14 +75,13 @@ fun Activity.startGridActivity(category : Category) {
     this.startActivity(intent, bundle)
 }
 
-/**
- * Start the ErrorActivity displaying some information to the user about what went wrong
- * TODO: pass in an Exception or error object
- */
-fun Activity.startErrorActivity() {
-    val intent = Intent(this, BrowseErrorActivity::class.java)
-    val bundle = ActivityOptionsCompat.makeSceneTransitionAnimation(this).toBundle()
-    startActivity(intent, bundle)
+fun Activity.showErrorFragment(e : ParserException) {
+    val fragmentArgs = Bundle()
+    fragmentArgs.putSerializable("error", e)
+    val errorFragment = ErrorFragment()
+    errorFragment.arguments = fragmentArgs
+    fragmentManager.beginTransaction().add(R.id.main_browse_fragment, errorFragment).commit()
+    errorFragment.setErrorContent()
 }
 
 /**

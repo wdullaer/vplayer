@@ -27,6 +27,7 @@ import android.util.Log
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
@@ -89,14 +90,22 @@ class MainFragment : BrowseFragment() {
         mRowsAdapter = ArrayObjectAdapter(ListRowPresenter())
         val cardPresenter = CardPresenter()
 
-        getLandingPage(resources.getString(R.string.default_playlist_title)) {
-            mRowsAdapter.addAll(0, it.map {
+        getLandingPage(resources.getString(R.string.default_playlist_title)) { error, playlists ->
+            error?.let {
+                when (it) {
+                    is ParserException -> activity.showErrorFragment(it)
+                    is NetworkException -> Toast.makeText(activity, R.string.video_error_server_inaccessible, Toast.LENGTH_LONG).show()
+                    else -> Toast.makeText(activity, R.string.video_error_server_inaccessible, Toast.LENGTH_LONG).show()
+                }
+            }
+
+            mRowsAdapter.addAll(0, playlists.map {
                 val listRowAdapter = ArrayObjectAdapter(cardPresenter)
                 listRowAdapter.addAll(0, it.data)
                 val header = HeaderItem(it.title)
                 ListRow(header, listRowAdapter)
             })
-            mRowsAdapter.notifyArrayItemRangeChanged(0, it.size)
+            mRowsAdapter.notifyArrayItemRangeChanged(0, playlists.size)
             this.setSelectedPosition(0, true)
         }
 
@@ -111,11 +120,18 @@ class MainFragment : BrowseFragment() {
         ))
         mRowsAdapter.add(ListRow(gridHeader, gridRowAdapter))
 
-        getCategories {
+        getCategories { error, categories ->
+            error?.let {
+                val resId = when (it) {
+                    is ParserException -> R.string.parse_category_error
+                    else -> R.string.video_error_server_inaccessible
+                }
+                Toast.makeText(activity, resId, Toast.LENGTH_LONG).show()
+            }
             val categoryHeader = HeaderItem(998L, "Categories")
             val categoryRowAdapter = ArrayObjectAdapter(cardPresenter)
-            categoryRowAdapter.addAll(0, it)
-            categoryRowAdapter.notifyArrayItemRangeChanged(0, it.size)
+            categoryRowAdapter.addAll(0, categories)
+            categoryRowAdapter.notifyArrayItemRangeChanged(0, categories.size)
             if (mRowsAdapter.size() == 0) {
                 mRowsAdapter.add(ListRow(categoryHeader, categoryRowAdapter))
             } else {

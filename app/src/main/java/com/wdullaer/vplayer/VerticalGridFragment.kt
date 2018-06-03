@@ -14,6 +14,7 @@ import android.support.v17.leanback.widget.ArrayObjectAdapter
 import android.support.v17.leanback.widget.ImageCardView
 import android.support.v17.leanback.widget.VerticalGridPresenter
 import android.util.Log
+import android.widget.Toast
 
 /**
  * Fragment that shows a grid of videos that can be scrolled vertically
@@ -30,8 +31,12 @@ class VerticalGridFragment : android.support.v17.leanback.app.VerticalGridFragme
         title = category.name
 
         val arrayAdapter = ArrayObjectAdapter(CardPresenter())
-        getMoviesByCategory(category) {
-            arrayAdapter.addAll(0, it)
+        getMoviesByCategory(category) { error, videos ->
+            error?.let {
+                // TODO: distinguish between network and parsing errors
+                Toast.makeText(activity, R.string.video_error_server_inaccessible, Toast.LENGTH_LONG).show()
+            }
+            arrayAdapter.addAll(0, videos)
             arrayAdapter.notifyArrayItemRangeChanged(0, arrayAdapter.size())
         }
         adapter = arrayAdapter

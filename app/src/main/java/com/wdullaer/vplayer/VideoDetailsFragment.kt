@@ -72,6 +72,10 @@ class VideoDetailsFragment : DetailsFragment() {
         val cookie = activity.getSharedPreferences(AUTHENTICATION_PREFERENCE_ROOT, Context.MODE_PRIVATE)
                 .getString(activity.getString(R.string.pref_cookie_key), "")
         enrichVideo(mSelectedVideo, cookie) {
+            it?.let {
+                // TODO: distinguish between network, authorization and parsing error
+                Toast.makeText(activity, R.string.video_error_server_inaccessible, Toast.LENGTH_LONG).show()
+            }
             updateBackground(mSelectedVideo)
             updateRelatedMoviesListRow(arrayAdapter)
             arrayAdapter.notifyArrayItemRangeChanged(0, arrayAdapter.size())

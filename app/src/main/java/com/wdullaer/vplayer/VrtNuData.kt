@@ -33,7 +33,7 @@ const val VRT_BASE_PATH = "https://www.vrt.be"
 const val HTML_MIME = "text/html"
 const val JSON_MIME = "application/json"
 
-fun getLandingPage(defaultTitle: String, callback : (List<Playlist>) -> Unit) {
+fun getLandingPage(defaultTitle: String, callback : (Exception?, List<Playlist>) -> Unit) {
     fun parseLists(doc : Element) : Playlist {
         val title = doc.select("h2.vrtlist__title").first()?.text()?.trim()?.capitalize()
         val data = doc.select("li.vrtlist__item").map { parseVideo(it) }
@@ -45,90 +45,109 @@ fun getLandingPage(defaultTitle: String, callback : (List<Playlist>) -> Unit) {
     endpoint.httpGet().header("Accept" to HTML_MIME).responseString {_, _, result ->
         when (result) {
             is Result.Success -> {
-                callback(Jsoup.parse(result.get()).select(".list").map(::parseLists))
+                try {
+                    Jsoup.parse(result.get()).select(".list").map(::parseLists)
+                } catch (e : Exception) {
+                    Log.e("getLandingpage", "Failed to parse landingpage HTML")
+                    Log.e("getLandingpage", e.toString())
+                    callback(ParserException(e, PARSE_LANDINGPAGE_ERROR), listOf())
+                    null
+                }?.let { callback(null, it) }
             }
             is Result.Failure -> {
                 Log.e("getLandingpage", "Failed to retrieve data from $endpoint")
                 Log.e("getLandingpage", result.error.toString())
-                callback(listOf())
+                callback(NetworkException(result.error), listOf())
             }
         }
     }
 }
 
-fun getCategories(callback : (List<Category>) -> Unit) {
+fun getCategories(callback : (Exception?, List<Category>) -> Unit) {
     val endpoint = "$VRT_BASE_PATH/vrtnu/categorieen"
     Log.i("getCategories", "Fetching data from $endpoint")
     endpoint.httpGet().header("Accept" to HTML_MIME).responseString {_, _, result ->
         when (result) {
             is Result.Success -> {
-                callback(Jsoup
-                        .parse(result.get())
-                        .select("li.vrtlist__item")
-                        .map(::parseCategory)
-                )
+                try {
+                    Jsoup
+                            .parse(result.get())
+                            .select("li.vrtlist__item")
+                            .map(::parseCategory)
+                } catch (e : Exception) {
+                    Log.e("getCategories", "Failed to parse categories HTML")
+                    Log.e("getCategories", e.toString())
+                    callback(ParserException(e, PARSE_CATEGORIES_ERROR), listOf())
+                    null
+                }?.let { callback(null, it) }
             }
             is Result.Failure -> {
                 Log.e("getCategories", "Failed to retrieve data from $endpoint")
                 Log.e("getCategories", result.error.toString())
-                callback(listOf())
+                callback(NetworkException(result.error), listOf())
             }
         }
     }
 }
 
-fun getMoviesByCategory(category : Category, callback : (List<Video>) -> Unit) {
+fun getMoviesByCategory(category : Category, callback : (Exception?, List<Video>) -> Unit) {
     val endpoint = "https://search.vrt.be/suggest?facets[categories]=${category.name.toLowerCase()}"
     Log.i("getMoviesByCategorie", "Fetching data from $endpoint")
 
     endpoint.httpGet().header("Accept" to JSON_MIME).responseJson { _, _, result ->
         when (result) {
             is Result.Success -> {
-                callback(result.get().array()
-                        .map { jsonToVideo(it as JSONObject, category.name) }
-                )
+                try {
+                    result.get().array().map { searchJsonToVideo(it as JSONObject, category.name) }
+                } catch (e : Exception) {
+                    Log.e("getMoviesByCategory", "Failed to parse search json")
+                    Log.e("getMoviesByCategory", e.toString())
+                    callback(ParserException(e, SEARCH_JSON_TO_VIDEO_ERROR), listOf())
+                    null
+                }?.let { callback(null, it) }
             }
             is Result.Failure -> {
                 Log.e("getMoviesByCategory", "Failed to retrieve data from $endpoint")
                 Log.e("getMoviesByCategory", result.error.toString())
-                callback(listOf())
+                callback(NetworkException(result.error), listOf())
             }
         }
     }
 }
 
-fun getVideoDetails(video : Video, cookie : String = "", callback : (Video) -> Unit) {
+fun getVideoDetails(video : Video, cookie : String = "", callback : (Exception?, Video?) -> Unit) {
     fun fetchVideoUrls(clientid : String, videoid : String) {
         val endpoint = "https://mediazone.vrt.be/api/v1/$clientid/assets/$videoid"
         endpoint.httpGet().header("Accept" to JSON_MIME, "Cookie" to cookie).responseJson {_, _, result ->
             when (result) {
                 is Result.Success -> {
-                    val json = result.get().obj()
-                    // TODO: validate payload before parsing
-                    // TODO: parse related videos
-                    val posterImage = toAbsoluteUrl(json.optString("posterImageUrl"))
-                    callback(Video(
-                            id = video.id,
-                            title = json.getString("title"),
-                            shortDescription = video.shortDescription,
-                            description = json.getString("description"),
-                            backgroundImageUrl = if (posterImage != "") posterImage else video.backgroundImageUrl,
-                            cardImageUrl =  video.cardImageUrl,
-                            detailsUrl = video.detailsUrl,
-                            category = video.category,
-                            relatedVideos = video.relatedVideos,
-                            videoUrl = json.getJSONArray("targetUrls")
-                                    .filter {(it as JSONObject).getString("type") == "MPEG_DASH"}
-                                    .map { it as JSONObject }
-                                    .first()
-                                    .getString("url")
-                    ))
+                    try {
+                        streamJsonToVideo(result.get().obj())
+                    } catch (e : Exception) {
+                        Log.e("getVideoDetails", "Failed to parse json containing stream urls")
+                        Log.e("getVideoDetails", e.toString())
+                        callback(ParserException(e, STREAM_JSON_TO_VIDEO_ERROR), video)
+                        null
+                    }?.let {
+                        val bgUrl = if (it.backgroundImageUrl != "") it.backgroundImageUrl else video.backgroundImageUrl
+                        callback(null, Video(
+                                id = video.id,
+                                title = it.title,
+                                shortDescription = video.shortDescription,
+                                description = it.description,
+                                backgroundImageUrl = bgUrl,
+                                cardImageUrl = video.cardImageUrl,
+                                detailsUrl = video.detailsUrl,
+                                category = video.category,
+                                relatedVideos = video.relatedVideos,
+                                videoUrl = it.videoUrl
+                        ))
+                    }
                 }
-                // TODO: pass the error on so we can render a nice message to the user
                 is Result.Failure -> {
                     Log.e("getVideoDetails", "Failed to retrieve data from $endpoint")
                     Log.e("getVideoDetails", result.error.toString())
-                    callback(video)
+                    callback(NetworkException(result.error), video)
                 }
             }
 
@@ -136,22 +155,27 @@ fun getVideoDetails(video : Video, cookie : String = "", callback : (Video) -> U
     }
 
     fun fetchVideoIds(detailsUrl : String) {
-        // TODO: this request requires authentication. Add it
         getVideosLink(detailsUrl).httpGet().header("Accept" to JSON_MIME, "Cookie" to cookie).responseJson { _, _, result ->
             when (result) {
                 is Result.Success -> {
                     val json = result.get().obj()
                     // TODO: validate payload before parsing
                     val key = json.keys().next()
-                    val clientid = json.getJSONObject(key).getString("clientid")
-                    val videoid = json.getJSONObject(key).getString("videoid")
-                    fetchVideoUrls(clientid, videoid)
+                    val clientid = json.getJSONObject(key).optString("clientid")
+                    val videoid = json.getJSONObject(key).optString("videoid")
+                    if (clientid == "" || videoid == "") {
+                        Log.e("getVideoDetails", "Failed to parse clientid and videoid")
+                        Log.e("getVideoDetails", json.toString())
+                        callback(ParserException(ID_JSON_ERROR), video)
+                    } else {
+                        fetchVideoUrls(clientid, videoid)
+                    }
                 }
-            // TODO: pass the error on so we can render a nice message to the user
                 is Result.Failure -> {
                     Log.e("getVideoDetails", "Failed to retrieve data from ${getVideosLink(detailsUrl)}")
                     Log.e("getVideoDetails", result.error.toString())
-                    callback(video)
+                    // TODO distinguish between a network error and a authorization error
+                    callback(NetworkException(result.error), video)
                 }
             }
         }
@@ -169,76 +193,93 @@ fun getVideoDetails(video : Video, cookie : String = "", callback : (Video) -> U
             // TODO use https://search.vrt.be/suggest and https://search.vrt.be/search to
             // populate the related videos and other seasons playlists rather than parsing the
             // website
-            video.relatedVideos = Jsoup.parse(result.get())
-                    .select(".main-content")
-                    .select("div.vrtlist")
-                    .map(::parsePlaylist)
+            video.relatedVideos = try {
+                Jsoup.parse(result.get())
+                        .select(".main-content")
+                        .select("div.vrtlist")
+                        .map(::parsePlaylist)
+            } catch (e : Exception) {
+                Log.e("getVideoDetails", "Failed to parse related video playlists")
+                Log.e("getVideoDetails", e.toString())
+                listOf()
+            }
             fetchVideoIds(detailsUrl)
         }
     }
 
     // TODO: pass the error on so we can render a nice message to the user
-    val detailsUrl = video.detailsUrl ?: return callback(video)
+    val detailsUrl = video.detailsUrl ?: return callback(Exception("Missing detailsUrl: cannot fetch additional details and playbackUrl"), video)
     Log.i("getVideoDetails", "Fetching data from $detailsUrl")
     getContentsLink(detailsUrl).httpGet().header("Accept" to JSON_MIME).responseJson {_, _, result ->
         when (result) {
             is Result.Success -> {
-                val info = result.get().obj()
-                video.title = info.getString("title")
-                video.shortDescription = info.getString("shortDescription")
-                video.description = sanitizeText(info.getString("description"))
-                video.backgroundImageUrl = if (info.getString("assetImage") == "") {
-                    toAbsoluteUrl(info.getString("programImageUrl"))
-                } else {
-                    toAbsoluteUrl(info.getString("assetImage"))
+                try {
+                    contentJsonToVideo(result.get().obj())
+                } catch (e : Exception) {
+                    Log.e("getVideoDetails", "Failed to parse content json")
+                    Log.e("getVideoDetails", e.toString())
+                    callback(ParserException(e, CONTENT_JSON_TO_VIDEO_ERROR), video)
+                    null
+                }?.let {
+                    video.title = it.title
+                    video.shortDescription = it.shortDescription
+                    video.description = it.description
+                    video.backgroundImageUrl = it.backgroundImageUrl
+                    video.detailsUrl = it.detailsUrl
+                    video.detailsUrl?.let { fetchRelatedVideos(it) }
                 }
-                val newDetailsUrl = toAbsoluteUrl(info.getString("url"))
-                video.detailsUrl = newDetailsUrl
-                fetchRelatedVideos(newDetailsUrl)
             }
             is Result.Failure -> {
                 Log.e("getVideoDetails", "Failed to retrieve data from $detailsUrl")
                 Log.e("getVideoDetails", result.error.toString())
-                callback(video)
+                callback(NetworkException(result.error), video)
             }
         }
     }
 }
 
-fun enrichVideo(video : Video, cookie : String, callback: () -> Unit) {
-    getVideoDetails(video, cookie) {
-        video.id = it.id
-        video.title = it.title
-        video.shortDescription = it.shortDescription
-        video.description = it.description
-        video.backgroundImageUrl = it.backgroundImageUrl
-        video.cardImageUrl = it.cardImageUrl
-        video.detailsUrl = it.cardImageUrl
-        video.category = it.category
-        video.videoUrl = it.videoUrl
-        video.relatedVideos = it.relatedVideos
-        callback()
+fun enrichVideo(video : Video, cookie : String, callback: (Exception?) -> Unit) {
+    getVideoDetails(video, cookie) { error, result ->
+        result?.let {
+            video.id = it.id
+            video.title = it.title
+            video.shortDescription = it.shortDescription
+            video.description = it.description
+            video.backgroundImageUrl = it.backgroundImageUrl
+            video.cardImageUrl = it.cardImageUrl
+            video.detailsUrl = it.cardImageUrl
+            video.category = it.category
+            video.videoUrl = it.videoUrl
+            video.relatedVideos = it.relatedVideos
+        }
+        callback(error)
     }
 }
 
-fun searchVideo (query : String, callback : (Playlist) -> Unit) {
+fun searchVideo (query : String, callback : (Exception?, Playlist?) -> Unit) {
     if (query == "") {
-        callback(Playlist())
+        callback(null, Playlist())
     }
     val endpoint = "https://search.vrt.be/suggest?i=video&q=$query"
     endpoint.httpGet().header("Accept" to JSON_MIME).responseJson { _, _, result ->
         when (result) {
             is Result.Success -> {
-                val videos = result.get()
-                        .array()
-                        .map { it as JSONObject }
-                        .map { jsonToVideo(it) }
-                callback(Playlist(query, videos))
+                try {
+                    result.get()
+                            .array()
+                            .map { it as JSONObject }
+                            .map { searchJsonToVideo(it) }
+                } catch (e : Exception) {
+                    Log.e("searchVideo", "Failed to parse search json")
+                    Log.e("searchVideo", e.toString())
+                    callback(ParserException(e, SEARCH_JSON_TO_VIDEO_ERROR), Playlist())
+                    null
+                }?.let { callback(null, Playlist(query, it)) }
             }
             is Result.Failure -> {
                 Log.e("searchVideo", "Failed to retrieve data from $endpoint")
                 Log.e("searchVideo", result.error.toString())
-                callback(Playlist())
+                callback(NetworkException(result.error), Playlist())
             }
         }
     }
@@ -269,7 +310,7 @@ private fun parseVideo (doc : Element, category : String = "") : Video {
     )
 }
 
-private fun jsonToVideo (json : JSONObject, category: String = "") : Video {
+private fun searchJsonToVideo (json : JSONObject, category: String = "") : Video {
     return Video(
             id = UUID.randomUUID().mostSignificantBits,
             title = json.getString("title"),
@@ -279,6 +320,36 @@ private fun jsonToVideo (json : JSONObject, category: String = "") : Video {
             cardImageUrl = toAbsoluteUrl(json.getString("thumbnail")),
             brand = json.getJSONArray("brands").optString(0),
             category = category
+    )
+}
+
+private fun contentJsonToVideo (json : JSONObject) : Video {
+    val backgroundImageUrl = if (json.getString("assetImage") == "") {
+        json.getString("programImage")
+    } else {
+        json.getString("assetImage")
+    }
+    return Video(
+            id = UUID.randomUUID().mostSignificantBits,
+            title = json.getString("title"),
+            shortDescription =  json.getString("shortDescription"),
+            description = json.getString("description"),
+            backgroundImageUrl = backgroundImageUrl,
+            detailsUrl = toAbsoluteUrl(json.getString("url"))
+    )
+}
+
+private fun streamJsonToVideo (json : JSONObject) : Video {
+    val posterImage = toAbsoluteUrl(json.optString("posterImageUrl"))
+    return Video(
+            title = json.getString("title"),
+            description = json.getString("description"),
+            backgroundImageUrl = posterImage,
+            videoUrl = json.getJSONArray("targetUrls")
+                    .filter {(it as JSONObject).getString("type") == "MPEG_DASH"}
+                    .map { it as JSONObject }
+                    .first()
+                    .getString("url")
     )
 }
 

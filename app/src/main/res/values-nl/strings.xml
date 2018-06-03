@@ -26,4 +26,5 @@
     <string name="toast_login_successful">Proficiat, U bent aangemeld bij VRT NU!</string>
     <string name="default_playlist_title">Uitgelicht</string>
     <string name="search_results">Zoekresultaten voor</string>
+    <string name="parse_category_error">Het uitlezen van de categoriën is mislukt</string>
 </resources>
