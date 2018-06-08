@@ -8,11 +8,12 @@
 
 package com.wdullaer.vplayer
 
+import android.app.Activity
 import android.content.Context
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.support.v17.leanback.app.BackgroundManager
-import android.support.v17.leanback.app.DetailsFragment
+import android.support.v17.leanback.app.DetailsSupportFragment
 import android.support.v17.leanback.widget.*
 import android.support.v4.content.ContextCompat
 import android.util.DisplayMetrics
@@ -34,7 +35,7 @@ import android.widget.ImageView
  * A wrapper fragment for leanback details screens.
  * It shows a detailed view of video and its metadata plus related videos.
  */
-class VideoDetailsFragment : DetailsFragment() {
+class VideoDetailsFragment : DetailsSupportFragment() {
 
     private lateinit var mSelectedVideo: Video
     private lateinit var backgroundManager : BackgroundManager
@@ -44,6 +45,8 @@ class VideoDetailsFragment : DetailsFragment() {
         Log.d(TAG, "onCreate DetailsFragment")
         super.onCreate(savedInstanceState)
 
+        val activity = requireActivity()
+
         backgroundManager = BackgroundManager.getInstance(activity)
         backgroundManager.attach(activity.window)
         activity.windowManager.defaultDisplay.getMetrics(windowMetrics)
@@ -52,8 +55,8 @@ class VideoDetailsFragment : DetailsFragment() {
         val presenterSelector = ClassPresenterSelector()
         val arrayAdapter = ArrayObjectAdapter(presenterSelector)
 
-        setupDetailsOverviewRow(arrayAdapter)
-        setupDetailsOverviewRowPresenter(presenterSelector)
+        setupDetailsOverviewRow(activity, arrayAdapter)
+        setupDetailsOverviewRowPresenter(activity, presenterSelector)
         setupRelatedMovieListRow(arrayAdapter, presenterSelector)
 
         adapter = arrayAdapter
@@ -108,12 +111,12 @@ class VideoDetailsFragment : DetailsFragment() {
                 })
     }
 
-    private fun setupDetailsOverviewRow(arrayAdapter : ArrayObjectAdapter) {
+    private fun setupDetailsOverviewRow(context: Context, arrayAdapter : ArrayObjectAdapter) {
         Log.d(TAG, "doInBackground: " + mSelectedVideo.toString())
         val row = DetailsOverviewRow(mSelectedVideo)
-        row.imageDrawable = ContextCompat.getDrawable(activity, R.drawable.default_background)
-        val width = activity.resources.getDimensionPixelSize(R.dimen.details_thumb_width)
-        val height = activity.resources.getDimensionPixelSize(R.dimen.details_thumb_heigth)
+        row.imageDrawable = ContextCompat.getDrawable(context, R.drawable.default_background)
+        val width = context.resources.getDimensionPixelSize(R.dimen.details_thumb_width)
+        val height = context.resources.getDimensionPixelSize(R.dimen.details_thumb_heigth)
         val glideOptions = RequestOptions()
                 .fitCenter()
                 .dontAnimate()
@@ -141,7 +144,7 @@ class VideoDetailsFragment : DetailsFragment() {
         arrayAdapter.add(row)
     }
 
-    private fun setupDetailsOverviewRowPresenter(presenterSelector: ClassPresenterSelector) {
+    private fun setupDetailsOverviewRowPresenter(activity: Activity, presenterSelector: ClassPresenterSelector) {
         val detailsPresenter = object : FullWidthDetailsOverviewRowPresenter(
                 DetailsDescriptionPresenter(),
                 VideoDetailsOverviewLogoPresenter()

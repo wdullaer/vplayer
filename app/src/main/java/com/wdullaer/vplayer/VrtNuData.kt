@@ -115,7 +115,7 @@ fun getMoviesByCategory(category : Category, callback : (Exception?, List<Video>
     }
 }
 
-fun getVideoDetails(video : Video, cookie : String = "", callback : (Exception?, Video?) -> Unit) {
+fun getVideoDetails(video : Video, cookie : String = "", callback : (Exception?, Video) -> Unit) {
     fun fetchVideoUrls(clientid : String, videoid : String) {
         val endpoint = "https://mediazone.vrt.be/api/v1/$clientid/assets/$videoid"
         endpoint.httpGet().header("Accept" to JSON_MIME, "Cookie" to cookie).responseJson {_, _, result ->
@@ -240,23 +240,22 @@ fun getVideoDetails(video : Video, cookie : String = "", callback : (Exception?,
 
 fun enrichVideo(video : Video, cookie : String, callback: (Exception?) -> Unit) {
     getVideoDetails(video, cookie) { error, result ->
-        result?.let {
-            video.id = it.id
-            video.title = it.title
-            video.shortDescription = it.shortDescription
-            video.description = it.description
-            video.backgroundImageUrl = it.backgroundImageUrl
-            video.cardImageUrl = it.cardImageUrl
-            video.detailsUrl = it.cardImageUrl
-            video.category = it.category
-            video.videoUrl = it.videoUrl
-            video.relatedVideos = it.relatedVideos
-        }
+        video.id = result.id
+        video.title = result.title
+        video.shortDescription = result.shortDescription
+        video.description = result.description
+        video.backgroundImageUrl = result.backgroundImageUrl
+        video.cardImageUrl = result.cardImageUrl
+        video.detailsUrl = result.cardImageUrl
+        video.category = result.category
+        video.videoUrl = result.videoUrl
+        video.relatedVideos = result.relatedVideos
+
         callback(error)
     }
 }
 
-fun searchVideo (query : String, callback : (Exception?, Playlist?) -> Unit) {
+fun searchVideo (query : String, callback : (Exception?, Playlist) -> Unit) {
     if (query == "") {
         callback(null, Playlist())
     }
@@ -304,6 +303,7 @@ private fun parseVideo (doc : Element, category : String = "") : Video {
             id = UUID.randomUUID().mostSignificantBits,
             title = doc.select("h3.tile__title").first().text(),
             description = getDescription(doc),
+            shortDescription = getDescription(doc),
             cardImageUrl = parseSrcSet(doc.select("div.tile__image").first().select("img").first().attr("srcset")),
             category = category,
             detailsUrl = toAbsoluteUrl(doc.select("a.tile")?.first()?.attr("href"))

@@ -17,7 +17,7 @@ import java.io.StringWriter
 /**
  * This class demonstrates how to extend [android.support.v17.leanback.app.ErrorFragment].
  */
-class ErrorFragment : android.support.v17.leanback.app.ErrorFragment() {
+class ErrorFragment : android.support.v17.leanback.app.ErrorSupportFragment() {
     var error : ParserException? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -26,7 +26,7 @@ class ErrorFragment : android.support.v17.leanback.app.ErrorFragment() {
     }
 
     internal fun setErrorContent() {
-        imageDrawable = ContextCompat.getDrawable(activity, R.drawable.lb_ic_sad_cloud)
+        imageDrawable = ContextCompat.getDrawable(requireContext(), R.drawable.lb_ic_sad_cloud)
         setDefaultBackground(TRANSLUCENT)
 
         error?.let {
@@ -43,7 +43,7 @@ class ErrorFragment : android.support.v17.leanback.app.ErrorFragment() {
 
         buttonText = resources.getString(R.string.dismiss_error)
         buttonClickListener = View.OnClickListener {
-            fragmentManager.beginTransaction().remove(this@ErrorFragment).commit()
+            fragmentManager?.beginTransaction()?.remove(this@ErrorFragment)?.commit()
         }
 
 

@@ -8,7 +8,6 @@
 
 package com.wdullaer.vplayer
 
-import android.content.Intent
 import android.support.v4.app.FragmentActivity
 
 /**

@@ -15,6 +15,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.support.v4.app.ActivityOptionsCompat
+import android.support.v4.app.FragmentActivity
 import android.view.View
 import com.google.android.exoplayer2.util.Util
 import org.json.JSONArray
@@ -75,12 +76,12 @@ fun Activity.startGridActivity(category : Category) {
     this.startActivity(intent, bundle)
 }
 
-fun Activity.showErrorFragment(e : ParserException) {
+fun FragmentActivity.showErrorFragment(e : ParserException) {
     val fragmentArgs = Bundle()
     fragmentArgs.putSerializable("error", e)
     val errorFragment = ErrorFragment()
     errorFragment.arguments = fragmentArgs
-    fragmentManager.beginTransaction().add(R.id.main_browse_fragment, errorFragment).commit()
+    supportFragmentManager.beginTransaction().add(R.id.main_browse_fragment, errorFragment).commit()
     errorFragment.setErrorContent()
 }
 

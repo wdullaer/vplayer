@@ -65,7 +65,7 @@ class CardPresenter : Presenter() {
             is Video -> {
                 image = item.cardImageUrl
                 title = item.title ?: ""
-                content = item.description ?: ""
+                content = item.shortDescription ?: ""
             }
             is Category -> {
                 image = item.cardImageUrl

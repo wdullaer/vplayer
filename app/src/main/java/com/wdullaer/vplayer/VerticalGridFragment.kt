@@ -21,12 +21,12 @@ import android.widget.Toast
  *
  * Created by wdullaer on 23/10/17.
  */
-class VerticalGridFragment : android.support.v17.leanback.app.VerticalGridFragment() {
+class VerticalGridFragment : android.support.v17.leanback.app.VerticalGridSupportFragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Log.i("VerticalGridFragment", "onCreate")
 
-        val category = activity.intent.getSerializableExtra(INTENT_CATEGORY) as Category
+        val category = requireActivity().intent.getSerializableExtra(INTENT_CATEGORY) as Category
 
         title = category.name
 
@@ -34,7 +34,7 @@ class VerticalGridFragment : android.support.v17.leanback.app.VerticalGridFragme
         getMoviesByCategory(category) { error, videos ->
             error?.let {
                 // TODO: distinguish between network and parsing errors
-                Toast.makeText(activity, R.string.video_error_server_inaccessible, Toast.LENGTH_LONG).show()
+                Toast.makeText(requireContext(), R.string.video_error_server_inaccessible, Toast.LENGTH_LONG).show()
             }
             arrayAdapter.addAll(0, videos)
             arrayAdapter.notifyArrayItemRangeChanged(0, arrayAdapter.size())
@@ -48,11 +48,11 @@ class VerticalGridFragment : android.support.v17.leanback.app.VerticalGridFragme
 
         Handler().postDelayed({ startEntranceTransition() }, 500L)
 
-        setOnSearchClickedListener { activity.startSettingsActivity() }
+        setOnSearchClickedListener { requireActivity().startSettingsActivity() }
         // todo: Maybe make this a generic thing we can call from multiple activities?
         setOnItemViewClickedListener { itemViewHolder, item, _, _ ->
             if (item !is Video) return@setOnItemViewClickedListener
-            activity.startDetailsActivity(item, (itemViewHolder.view as ImageCardView).mainImageView)
+            requireActivity().startDetailsActivity(item, (itemViewHolder.view as ImageCardView).mainImageView)
         }
     }
 }

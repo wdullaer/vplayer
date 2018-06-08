@@ -8,19 +8,22 @@
 
 package com.wdullaer.vplayer
 
+import android.app.Activity
+import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
 import java.util.Timer
 
 import android.os.Bundle
 import android.support.v17.leanback.app.BackgroundManager
-import android.support.v17.leanback.app.BrowseFragment
+import android.support.v17.leanback.app.BrowseSupportFragment
 import android.support.v17.leanback.widget.ArrayObjectAdapter
 import android.support.v17.leanback.widget.HeaderItem
 import android.support.v17.leanback.widget.ImageCardView
 import android.support.v17.leanback.widget.ListRow
 import android.support.v17.leanback.widget.ListRowPresenter
 import android.support.v17.leanback.widget.Presenter
+import android.support.v4.app.FragmentActivity
 import android.support.v4.content.ContextCompat
 import android.util.DisplayMetrics
 import android.util.Log
@@ -39,7 +42,7 @@ import kotlin.concurrent.schedule
 /**
  * Loads a grid of cards with movies to browse.
  */
-class MainFragment : BrowseFragment() {
+class MainFragment : BrowseSupportFragment() {
 
     private lateinit var mRowsAdapter: ArrayObjectAdapter
     private lateinit var mBackgroundManager: BackgroundManager
@@ -52,13 +55,13 @@ class MainFragment : BrowseFragment() {
         Log.i(TAG, "onCreate")
         super.onActivityCreated(savedInstanceState)
 
-        prepareBackgroundManager()
+        prepareBackgroundManager(requireActivity())
 
-        setupUIElements()
+        setupUIElements(requireContext())
 
-        loadRows()
+        loadRows(requireActivity())
 
-        setupEventListeners()
+        setupEventListeners(requireActivity())
     }
 
     override fun onDestroy() {
@@ -67,26 +70,26 @@ class MainFragment : BrowseFragment() {
         mBackgroundTimer.cancel()
     }
 
-    private fun prepareBackgroundManager() {
+    private fun prepareBackgroundManager(activity: Activity) {
         mBackgroundManager = BackgroundManager.getInstance(activity)
         mBackgroundManager.attach(activity.window)
         mDefaultBackground = ContextCompat.getDrawable(activity, R.drawable.default_background)
         activity.windowManager.defaultDisplay.getMetrics(mMetrics)
     }
 
-    private fun setupUIElements() {
+    private fun setupUIElements(context: Context) {
         title = getString(R.string.browse_title)
         // over title
-        headersState = BrowseFragment.HEADERS_ENABLED
+        headersState = BrowseSupportFragment.HEADERS_ENABLED
         isHeadersTransitionOnBackEnabled = true
 
         // set fastLane (or headers) background color
-        brandColor = ContextCompat.getColor(activity, R.color.fastlane_background)
+        brandColor = ContextCompat.getColor(context, R.color.fastlane_background)
         // set search icon color
-        searchAffordanceColor = ContextCompat.getColor(activity, R.color.search_opaque)
+        searchAffordanceColor = ContextCompat.getColor(context, R.color.search_opaque)
     }
 
-    private fun loadRows() {
+    private fun loadRows(activity: FragmentActivity) {
         mRowsAdapter = ArrayObjectAdapter(ListRowPresenter())
         val cardPresenter = CardPresenter()
 
@@ -142,7 +145,7 @@ class MainFragment : BrowseFragment() {
         adapter = mRowsAdapter
     }
 
-    private fun setupEventListeners() {
+    private fun setupEventListeners(activity: Activity) {
         setOnSearchClickedListener { activity.startSearchActivity() }
 
         setOnItemViewSelectedListener { _, item, _, _ ->
@@ -220,21 +223,21 @@ class MainFragment : BrowseFragment() {
                 }
             }
 
-            val width = activity.resources.getDimensionPixelSize(R.dimen.icon_card_width)
-            val height = activity.resources.getDimensionPixelSize(R.dimen.icon_card_height)
+            val width = parent.context.resources.getDimensionPixelSize(R.dimen.icon_card_width)
+            val height = parent.context.resources.getDimensionPixelSize(R.dimen.icon_card_height)
             view.layoutParams = ViewGroup.LayoutParams(width, height)
             view.isFocusable = true
             view.isFocusableInTouchMode = true
             view.setMainImageDimensions(width, width)
             view.setMainImageScaleType(ImageView.ScaleType.FIT_CENTER)
-            view.setBackgroundColor(ContextCompat.getColor(activity, R.color.default_background))
+            view.setBackgroundColor(ContextCompat.getColor(parent.context, R.color.default_background))
             return Presenter.ViewHolder(view)
         }
 
         override fun onBindViewHolder(viewHolder: Presenter.ViewHolder, item: Any) {
             val card = viewHolder.view as ImageCardView
             card.titleText = (item as MenuCard).label
-            card.mainImage = activity.getDrawable(item.imageRes)
+            card.mainImage = requireContext().getDrawable(item.imageRes)
         }
 
         override fun onUnbindViewHolder(viewHolder: Presenter.ViewHolder) {

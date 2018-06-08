@@ -8,9 +8,9 @@
 
 package com.wdullaer.vplayer
 
-import android.app.Fragment
 import android.os.Bundle
 import android.os.Handler
+import android.support.v4.app.Fragment
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
@@ -35,14 +35,14 @@ class BrowseErrorActivity : LeanbackActivity() {
 
     private fun testError() {
         mErrorFragment = ErrorFragment()
-        fragmentManager.beginTransaction().add(R.id.main_browse_fragment, mErrorFragment).commit()
+        supportFragmentManager.beginTransaction().add(R.id.main_browse_fragment, mErrorFragment).commit()
 
         mSpinnerFragment = SpinnerFragment()
-        fragmentManager.beginTransaction().add(R.id.main_browse_fragment, mSpinnerFragment).commit()
+        supportFragmentManager.beginTransaction().add(R.id.main_browse_fragment, mSpinnerFragment).commit()
 
         val handler = Handler()
         handler.postDelayed({
-            fragmentManager.beginTransaction().remove(mSpinnerFragment).commit()
+            supportFragmentManager.beginTransaction().remove(mSpinnerFragment).commit()
             mErrorFragment.setErrorContent()
         }, TIMER_DELAY)
     }

@@ -9,8 +9,9 @@
 package com.wdullaer.vplayer
 
 import android.os.Bundle
-import android.support.v17.leanback.app.SearchFragment
+import android.support.v17.leanback.app.SearchSupportFragment
 import android.support.v17.leanback.widget.*
+import android.widget.Toast
 import java.util.*
 import kotlin.concurrent.schedule
 
@@ -20,16 +21,16 @@ import kotlin.concurrent.schedule
  * Created by wdullaer on 23/10/17.
  */
 class SearchActivity : LeanbackActivity() {
-    private lateinit var mFragment : SearchFragment
+    private lateinit var mFragment : SearchSupportFragment
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_search)
-        mFragment = fragmentManager.findFragmentById(R.id.search_fragment) as SearchFragment
+        mFragment = supportFragmentManager.findFragmentById(R.id.search_fragment) as SearchSupportFragment
     }
 }
 
-class SearchFragment : SearchFragment() {
+class SearchFragment : SearchSupportFragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -49,10 +50,18 @@ class SearchFragment : SearchFragment() {
             }
 
             fun updateSearchResults(query : String) {
-                searchVideo(query) {
+                searchVideo(query) { error, results ->
+                    error?.let {
+                        when (it) {
+                            is ParserException -> requireActivity().showErrorFragment(it)
+                            is NetworkException -> Toast.makeText(requireContext(), R.string.video_error_server_inaccessible, Toast.LENGTH_LONG).show()
+                            else -> Toast.makeText(requireContext(), R.string.video_error_server_inaccessible, Toast.LENGTH_LONG).show()
+                        }
+                    }
+
                     videoAdapter.clear()
-                    videoAdapter.addAll(0, it.data)
-                    val header = HeaderItem("${activity.getString(R.string.search_results)} ${it.title}")
+                    videoAdapter.addAll(0, results.data)
+                    val header = HeaderItem("${requireActivity().getString(R.string.search_results)} ${results.title}")
                     mRowsAdapter.clear()
                     mRowsAdapter.add(ListRow(header, videoAdapter))
                 }
@@ -77,7 +86,7 @@ class SearchFragment : SearchFragment() {
         })
 
         setOnItemViewClickedListener { itemViewHolder, item, _, _ ->
-            activity.startDetailsActivity(item as Video, (itemViewHolder.view as ImageCardView).mainImageView)
+            requireActivity().startDetailsActivity(item as Video, (itemViewHolder.view as ImageCardView).mainImageView)
         }
     }
 }
