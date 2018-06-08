@@ -8,12 +8,12 @@
 
 package com.wdullaer.vplayer
 
-import android.app.Activity
 import android.content.Context
 import android.os.Bundle
-import android.support.v17.leanback.app.GuidedStepFragment
+import android.support.v17.leanback.app.GuidedStepSupportFragment
 import android.support.v17.leanback.widget.GuidanceStylist
 import android.support.v17.leanback.widget.GuidedAction
+import android.support.v4.app.FragmentActivity
 import android.text.InputType
 import android.util.Log
 import android.widget.Toast
@@ -26,16 +26,16 @@ import android.widget.Toast
  *
  * Created by wdullaer on 5/11/17.
  */
-class AuthenticationActivity : Activity() {
+class AuthenticationActivity : FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (savedInstanceState == null) {
-            GuidedStepFragment.addAsRoot(this, FirstStepFragment(), android.R.id.content)
+            GuidedStepSupportFragment.addAsRoot(this, FirstStepFragment(), android.R.id.content)
         }
     }
 }
 
-class FirstStepFragment : GuidedStepFragment() {
+class FirstStepFragment : GuidedStepSupportFragment() {
     private val LOGIN = 2L
     private val USERNAME = 3L
     private val PASSWORD = 4L
@@ -47,29 +47,30 @@ class FirstStepFragment : GuidedStepFragment() {
     override fun onCreateGuidance(savedInstanceState: Bundle?): GuidanceStylist.Guidance {
         val title = getString(R.string.authentication_screen_title)
         val description = getString(R.string.authentication_screen_description)
-        val icon = activity.getDrawable(R.drawable.app_icon_your_company)
+        val icon = requireContext().getDrawable(R.drawable.vplayer_banner)
         return GuidanceStylist.Guidance(title, description, "", icon)
     }
 
     override fun onCreateActions(actions: MutableList<GuidedAction>, savedInstanceState: Bundle?) {
-        val defaultUsername = activity.getSharedPreferences(AUTHENTICATION_PREFERENCE_ROOT, Context.MODE_PRIVATE)
-                .getString(activity.getString(R.string.pref_username_key), "")
-        val defaultPassword = activity.getSharedPreferences(AUTHENTICATION_PREFERENCE_ROOT, Context.MODE_PRIVATE)
-                .getString(activity.getString(R.string.pref_password_key), "")
+        val context = requireContext()
+        val defaultUsername = context.getSharedPreferences(AUTHENTICATION_PREFERENCE_ROOT, Context.MODE_PRIVATE)
+                .getString(context.getString(R.string.pref_username_key), "")
+        val defaultPassword = context.getSharedPreferences(AUTHENTICATION_PREFERENCE_ROOT, Context.MODE_PRIVATE)
+                .getString(context.getString(R.string.pref_password_key), "")
         Log.i("AuthenticationActivity", defaultUsername)
         Log.i("AuthenticationActivity", defaultPassword.length.toString())
 
         val username = GuidedAction
                 .Builder(activity)
                 .id(USERNAME)
-                .title(activity.getString(R.string.pref_username_title))
+                .title(context.getString(R.string.pref_username_title))
                 .descriptionEditable(true)
                 .editDescription(defaultUsername)
                 .build()
         val password = GuidedAction
                 .Builder(activity)
                 .id(PASSWORD)
-                .title(activity.getString(R.string.pref_password_title))
+                .title(context.getString(R.string.pref_password_title))
                 .descriptionEditable(true)
                 .editDescription(defaultPassword)
                 .descriptionEditInputType(InputType.TYPE_TEXT_VARIATION_PASSWORD.or(InputType.TYPE_CLASS_TEXT))
@@ -77,7 +78,7 @@ class FirstStepFragment : GuidedStepFragment() {
         val login = GuidedAction
                 .Builder(activity)
                 .id(LOGIN)
-                .title(activity.getString(R.string.pref_action_login))
+                .title(context.getString(R.string.pref_action_login))
                 .build()
 
         actions.add(username)
@@ -99,9 +100,10 @@ class FirstStepFragment : GuidedStepFragment() {
 
                 Log.i("AuthenticationActivity", "Saving Credentials")
 
-                activity.getSharedPreferences(AUTHENTICATION_PREFERENCE_ROOT, Context.MODE_PRIVATE).edit()
-                        .putString(activity.getString(R.string.pref_username_key), username)
-                        .putString(activity.getString(R.string.pref_password_key), password)
+                val context = requireContext()
+                context.getSharedPreferences(AUTHENTICATION_PREFERENCE_ROOT, Context.MODE_PRIVATE).edit()
+                        .putString(context.getString(R.string.pref_username_key), username)
+                        .putString(context.getString(R.string.pref_password_key), password)
                         .apply()
 
                 Log.i("AuthenticationActivity", "Refreshing Cookie")
@@ -110,23 +112,23 @@ class FirstStepFragment : GuidedStepFragment() {
                 refreshVrtCookie(username, password) {error, cookie ->
                     Log.i("Authentication", "Handling cookie callback")
                     if (error == null && cookie != null) {
-                            activity.getSharedPreferences(AUTHENTICATION_PREFERENCE_ROOT, Context.MODE_PRIVATE).edit()
-                                    .putString(activity.getString(R.string.pref_cookie_key), cookie)
+                            context.getSharedPreferences(AUTHENTICATION_PREFERENCE_ROOT, Context.MODE_PRIVATE).edit()
+                                    .putString(context.getString(R.string.pref_cookie_key), cookie)
                                     .apply()
 
                             Toast.makeText(
-                                    activity,
-                                    activity.getString(R.string.toast_login_successful),
+                                    context,
+                                    context.getString(R.string.toast_login_successful),
                                     Toast.LENGTH_SHORT
                             ).show()
                     } else {
                         Toast.makeText(
-                                activity,
-                                activity.getString(R.string.video_error_unknown_error),
+                                context,
+                                context.getString(R.string.video_error_unknown_error),
                                 Toast.LENGTH_SHORT
                         ).show()
                     }
-                    activity.finishAfterTransition()
+                    requireActivity().finishAfterTransition()
                 }
             }
         }

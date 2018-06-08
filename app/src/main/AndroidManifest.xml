@@ -11,6 +11,9 @@
     <uses-feature
         android:name="android.software.leanback"
         android:required="true" />
+    <uses-feature
+        android:name="android.hardware.microphone"
+        android:required="false" />
 
     <application
         android:allowBackup="true"
@@ -21,10 +24,10 @@
         android:fullBackupContent="@xml/backup_descriptor">
         <activity
             android:name="com.wdullaer.vplayer.MainActivity"
-            android:banner="@drawable/app_icon_your_company"
-            android:icon="@drawable/app_icon_your_company"
+            android:banner="@drawable/vplayer_banner"
+            android:icon="@drawable/vplayer_banner"
             android:label="@string/app_name"
-            android:logo="@drawable/app_icon_your_company"
+            android:logo="@drawable/vplayer_banner"
             android:screenOrientation="landscape">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
