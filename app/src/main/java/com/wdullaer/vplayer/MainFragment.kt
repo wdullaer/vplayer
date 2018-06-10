@@ -10,6 +10,7 @@ package com.wdullaer.vplayer
 
 import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
 import java.util.Timer
@@ -36,6 +37,7 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import com.bumptech.glide.request.target.SimpleTarget
 import com.bumptech.glide.request.transition.Transition
+import com.wdullaer.vplayer.recommendation.RecommendationService
 import kotlin.properties.Delegates
 import kotlin.concurrent.schedule
 
@@ -62,6 +64,8 @@ class MainFragment : BrowseSupportFragment() {
         loadRows(requireActivity())
 
         setupEventListeners(requireActivity())
+
+        updateRecommendations(requireActivity())
     }
 
     override fun onDestroy() {
@@ -131,14 +135,16 @@ class MainFragment : BrowseSupportFragment() {
                 }
                 Toast.makeText(activity, resId, Toast.LENGTH_LONG).show()
             }
-            val categoryHeader = HeaderItem(998L, "Categories")
-            val categoryRowAdapter = ArrayObjectAdapter(cardPresenter)
-            categoryRowAdapter.addAll(0, categories)
-            categoryRowAdapter.notifyArrayItemRangeChanged(0, categories.size)
-            if (mRowsAdapter.size() == 0) {
-                mRowsAdapter.add(ListRow(categoryHeader, categoryRowAdapter))
-            } else {
-                mRowsAdapter.add(mRowsAdapter.size() - 1, ListRow(categoryHeader, categoryRowAdapter))
+            if (!categories.isEmpty()) {
+                val categoryHeader = HeaderItem(998L, "Categories")
+                val categoryRowAdapter = ArrayObjectAdapter(cardPresenter)
+                categoryRowAdapter.addAll(0, categories)
+                categoryRowAdapter.notifyArrayItemRangeChanged(0, categories.size)
+                if (mRowsAdapter.size() == 0) {
+                    mRowsAdapter.add(ListRow(categoryHeader, categoryRowAdapter))
+                } else {
+                    mRowsAdapter.add(mRowsAdapter.size() - 1, ListRow(categoryHeader, categoryRowAdapter))
+                }
             }
         }
 
@@ -169,6 +175,10 @@ class MainFragment : BrowseSupportFragment() {
                 }
             }
         }
+    }
+
+    private fun updateRecommendations(activity : Activity) {
+        activity.startService(Intent(activity, RecommendationService::class.java))
     }
 
     private fun updateBackground(uri: String?) {
@@ -266,8 +276,6 @@ class MainFragment : BrowseSupportFragment() {
         private const val BACKGROUND_UPDATE_DELAY = 300L
     }
 }
-
-// TODO: render shortDescription in cards
 
 data class MenuCard (
         val label : String,

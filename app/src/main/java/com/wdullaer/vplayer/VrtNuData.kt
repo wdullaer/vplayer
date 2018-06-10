@@ -16,6 +16,7 @@ import org.json.JSONObject
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
 import java.util.UUID
+import kotlin.concurrent.thread
 
 /**
  * Utility functions which fetches data from VRT NU and returns it in an easily renderable shape
@@ -234,6 +235,20 @@ fun getVideoDetails(video : Video, cookie : String = "", callback : (Exception?,
                 Log.e("getVideoDetails", result.error.toString())
                 callback(NetworkException(result.error), video)
             }
+        }
+    }
+}
+
+fun getRecommendations(callback: (Exception?, Playlist) -> Unit) {
+    // The VRTNU landingpage kind of acts as a recommendation service
+    // We'll return the first 2 lists of whatever is on the landingpage
+    getLandingPage("Recommendations") { error, playlists ->
+        // The http library runs its callbacks on the UI thread, but recommendations should be
+        // fetched on a background thread. So we have to fork a new thread before doing anything else
+        thread {
+            val result = playlists.subList(0, 2)
+                    .reduce { acc, playlist ->  Playlist(acc.title, acc.data.plus(playlist.data))}
+            callback(error, result)
         }
     }
 }

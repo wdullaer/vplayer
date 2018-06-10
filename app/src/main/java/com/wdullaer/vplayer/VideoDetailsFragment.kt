@@ -9,6 +9,7 @@
 package com.wdullaer.vplayer
 
 import android.app.Activity
+import android.app.NotificationManager
 import android.content.Context
 import android.graphics.Bitmap
 import android.os.Bundle
@@ -41,6 +42,8 @@ class VideoDetailsFragment : DetailsSupportFragment() {
     private lateinit var backgroundManager : BackgroundManager
     private val windowMetrics = DisplayMetrics()
 
+    private val NO_NOTIFICATION = -1
+
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.d(TAG, "onCreate DetailsFragment")
         super.onCreate(savedInstanceState)
@@ -55,6 +58,7 @@ class VideoDetailsFragment : DetailsSupportFragment() {
         val presenterSelector = ClassPresenterSelector()
         val arrayAdapter = ArrayObjectAdapter(presenterSelector)
 
+        removeNotification(requireActivity())
         setupDetailsOverviewRow(activity, arrayAdapter)
         setupDetailsOverviewRowPresenter(activity, presenterSelector)
         setupRelatedMovieListRow(arrayAdapter, presenterSelector)
@@ -90,6 +94,14 @@ class VideoDetailsFragment : DetailsSupportFragment() {
         // Android doesn't seem to remember the background when coming back from another activity
         // So let's explicitly make sure it's showing
         updateBackground(mSelectedVideo)
+    }
+
+    private fun removeNotification(activity: Activity) {
+        val notification = activity.intent.getIntExtra(DetailsActivity.NOTIFICATION, NO_NOTIFICATION)
+        if (notification != NO_NOTIFICATION) {
+            (activity.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager)
+                    .cancel(notification)
+        }
     }
 
     private fun updateBackground(video: Video) {

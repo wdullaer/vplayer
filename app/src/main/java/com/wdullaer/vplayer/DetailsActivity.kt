@@ -23,5 +23,6 @@ class DetailsActivity : LeanbackActivity() {
     companion object {
         const val SHARED_ELEMENT_NAME = "hero"
         const val VIDEO = "Video"
+        const val NOTIFICATION = "Notification"
     }
 }

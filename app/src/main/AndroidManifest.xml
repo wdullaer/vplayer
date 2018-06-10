@@ -3,6 +3,7 @@
     package="com.wdullaer.vplayer">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
     <uses-feature
@@ -47,6 +48,15 @@
             android:exported="true"
             android:theme="@style/LeanbackPreferences"/>
         <activity android:name="com.wdullaer.vplayer.AuthenticationActivity" />
+        <receiver android:name=".recommendation.RecommendationReceiver"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+        <service android:name=".recommendation.RecommendationService"
+            android:enabled="true" />
     </application>
 
 </manifest>
