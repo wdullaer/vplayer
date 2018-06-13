@@ -104,7 +104,7 @@ class PlaybackVideoFragment : VideoSupportFragment() {
 
             override fun onPlaybackFinished() {
                 Log.d("PlaybackVideoFragment", "Play next in playlist or jump back to video details")
-                nActivity.startDetailsActivity(video)
+                nActivity.finish()
             }
         }
 
