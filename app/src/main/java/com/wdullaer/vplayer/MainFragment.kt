@@ -89,7 +89,14 @@ class MainFragment : BrowseSupportFragment() {
     }
 
     private fun loadRows(activity: FragmentActivity) {
-        mRowsAdapter = ArrayObjectAdapter(ListRowPresenter())
+        // Use a custom ListRowPresenter to ensure that the headers are always rendered
+        // Slight care has to be taken because setRowViewExpanded calls onRowViewExpanded
+        mRowsAdapter = ArrayObjectAdapter(object : ListRowPresenter() {
+            override fun onRowViewExpanded(holder: RowPresenter.ViewHolder?, expanded: Boolean) {
+                Log.d("onRowViewExpanded", "Expanded state changing")
+                if (!expanded) super.setRowViewExpanded(holder, true)
+            }
+        })
         val cardPresenter = CardPresenter()
 
         getLandingPage(resources.getString(R.string.default_playlist_title)) { error, playlists ->
