@@ -11,4 +11,10 @@
     <Preference
         android:key="@string/pref_login_key"
         android:title="@string/pref_login_title" />
+    <SwitchPreference
+        android:key="@string/pref_enable_recommendations_key"
+        android:title="@string/pref_enable_recommendations_title"
+        android:summaryOn="@string/pref_enable_recommendations_summary_on"
+        android:summaryOff="@string/pref_enable_recommendations_summary_off"
+        android:defaultValue="true" />
 </PreferenceScreen>

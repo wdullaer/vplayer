@@ -17,9 +17,13 @@
     <string name="video_error_server_inaccessible">De media server kon niet gecontacteerd worden</string>
     <string name="video_error_media_load_timeout">Het laden van de media duurde te lang</string>
     <string name="account_settings">Account</string>
+    <string name="settings">Instellingen</string>
     <string name="pref_username_title">Gebruikersnaam</string>
     <string name="pref_password_title">Paswoord</string>
     <string name="pref_login_title">VRT Account</string>
+    <string name="pref_enable_recommendations_title">Toon Aanbevelingen</string>
+    <string name="pref_enable_recommendations_summary_on">Er worden aanbevelingen weergegeven op het homescherm</string>
+    <string name="pref_enable_recommendations_summary_off">Er worden geen aanbevelingen weergegeven op het homescherm</string>
     <string name="authentication_screen_title">Aanmelden</string>
     <string name="authentication_screen_description">Gelieve je gebruikersnaam en paswoord voor VRT NU in te geven</string>
     <string name="pref_action_login">Aanmelden</string>

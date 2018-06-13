@@ -15,7 +15,7 @@
     <dimen name="details_thumb_heigth">154dp</dimen>
     <!-- Dimensions of the icon cards (eg: settings) in the MainActivity -->
     <dimen name="icon_card_width">200dp</dimen>
-    <dimen name="icon_card_height">287dp</dimen>
+    <dimen name="icon_card_height">250dp</dimen>
     <!-- Dimensions of the image cards -->
     <dimen name="image_card_width">313dp</dimen>
     <dimen name="image_card_height">176dp</dimen>

@@ -18,12 +18,7 @@ import java.util.Timer
 import android.os.Bundle
 import android.support.v17.leanback.app.BackgroundManager
 import android.support.v17.leanback.app.BrowseSupportFragment
-import android.support.v17.leanback.widget.ArrayObjectAdapter
-import android.support.v17.leanback.widget.HeaderItem
-import android.support.v17.leanback.widget.ImageCardView
-import android.support.v17.leanback.widget.ListRow
-import android.support.v17.leanback.widget.ListRowPresenter
-import android.support.v17.leanback.widget.Presenter
+import android.support.v17.leanback.widget.*
 import android.support.v4.app.FragmentActivity
 import android.support.v4.content.ContextCompat
 import android.util.DisplayMetrics
@@ -121,9 +116,15 @@ class MainFragment : BrowseSupportFragment() {
         val mGridPresenter = GridItemPresenter()
         val gridRowAdapter = ArrayObjectAdapter(mGridPresenter)
         gridRowAdapter.add(MenuCard(
-                resources.getString(R.string.account_settings),
-                R.drawable.ic_person_black_24dp,
-                activity::startSettingsActivity
+                label = resources.getString(R.string.account_settings),
+                description = getAccountName(requireContext()),
+                imageRes = R.drawable.ic_person_black_24dp,
+                onClickHandler = activity::startAuthenticationActivity
+        ))
+        gridRowAdapter.add(MenuCard(
+                label = resources.getString(R.string.settings),
+                imageRes = R.drawable.ic_settings_black_24dp,
+                onClickHandler = activity::startSettingsActivity
         ))
         mRowsAdapter.add(ListRow(gridHeader, gridRowAdapter))
 
@@ -211,6 +212,17 @@ class MainFragment : BrowseSupportFragment() {
         }
     }
 
+    private fun getAccountName(context : Context) : String {
+        val cookie = context.getSharedPreferences(AUTHENTICATION_PREFERENCE_ROOT, Context.MODE_PRIVATE)
+                .getString(context.resources.getString(R.string.pref_cookie_key), "")
+        return if (cookie == "") {
+            context.resources.getString(R.string.authentication_screen_title)
+        } else {
+            context.getSharedPreferences(AUTHENTICATION_PREFERENCE_ROOT, Context.MODE_PRIVATE)
+                    .getString(context.resources.getString(R.string.pref_username_key), "")
+        }
+    }
+
     private inner class GridItemPresenter : Presenter() {
         private var mDefaultCardImage: Drawable? = null
         private var sSelectedBackgroundColor: Int by Delegates.notNull()
@@ -240,13 +252,14 @@ class MainFragment : BrowseSupportFragment() {
             view.isFocusableInTouchMode = true
             view.setMainImageDimensions(width, width)
             view.setMainImageScaleType(ImageView.ScaleType.FIT_CENTER)
-            view.setBackgroundColor(ContextCompat.getColor(parent.context, R.color.default_background))
+            updateCardBackgroundColor(view, false)
             return Presenter.ViewHolder(view)
         }
 
         override fun onBindViewHolder(viewHolder: Presenter.ViewHolder, item: Any) {
             val card = viewHolder.view as ImageCardView
             card.titleText = (item as MenuCard).label
+            card.contentText = item.description
             card.mainImage = requireContext().getDrawable(item.imageRes)
         }
 
@@ -279,6 +292,7 @@ class MainFragment : BrowseSupportFragment() {
 
 data class MenuCard (
         val label : String,
+        val description : String = "",
         val imageRes: Int,
         val onClickHandler: () -> Unit
 )
