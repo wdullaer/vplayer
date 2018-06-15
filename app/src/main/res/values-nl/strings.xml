@@ -24,11 +24,15 @@
     <string name="pref_enable_recommendations_title">Toon Aanbevelingen</string>
     <string name="pref_enable_recommendations_summary_on">Er worden aanbevelingen weergegeven op het homescherm</string>
     <string name="pref_enable_recommendations_summary_off">Er worden geen aanbevelingen weergegeven op het homescherm</string>
-    <string name="authentication_screen_title">Aanmelden</string>
+    <string name="authentication_screen_title">Beheer VRT NU Inlog Gegevens</string>
     <string name="authentication_screen_description">Gelieve je gebruikersnaam en paswoord voor VRT NU in te geven</string>
     <string name="pref_action_login">Aanmelden</string>
+    <string name="pref_action_logout">Afmelden</string>
+    <string name="pref_action_refresh">Aanmelding vernieuwen</string>
     <string name="toast_login_successful">Proficiat, U bent aangemeld bij VRT NU!</string>
+    <string name="toast_logout_sucessful">U bent afgemeld bij VRT NU</string>
     <string name="default_playlist_title">Uitgelicht</string>
     <string name="search_results">Zoekresultaten voor</string>
     <string name="parse_category_error">Het uitlezen van de categoriën is mislukt</string>
+    <string name="default_account_name">Anoniem</string>
 </resources>

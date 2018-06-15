@@ -27,10 +27,13 @@
     <string name="pref_enable_recommendations_title">Show recommendations</string>
     <string name="pref_enable_recommendations_summary_on">Recommendations will be shown on the homesreen</string>
     <string name="pref_enable_recommendations_summary_off">No recommendations will be shown on the homesreen</string>
-    <string name="authentication_screen_title">Please login</string>
+    <string name="authentication_screen_title">Manage VRT NU Credentials</string>
     <string name="authentication_screen_description">Please enter your VRT NU username and password</string>
     <string name="pref_action_login">Login</string>
+    <string name="pref_action_logout">Logout</string>
+    <string name="pref_action_refresh">Refresh Login</string>
     <string name="search_results">Search results for</string>
+    <string name="default_account_name">Anonymous</string>
 
     <!-- Error messages -->
     <string name="video_error_media_load_timeout">Media loading timed out</string>
@@ -42,4 +45,5 @@
 
     <!-- Toast messages -->
     <string name="toast_login_successful">Congratulations, login to VRT NU was successful!</string>
+    <string name="toast_logout_successful">Account information for VRT NU has been removed</string>
 </resources>

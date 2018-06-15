@@ -223,7 +223,7 @@ class MainFragment : BrowseSupportFragment() {
         val cookie = context.getSharedPreferences(AUTHENTICATION_PREFERENCE_ROOT, Context.MODE_PRIVATE)
                 .getString(context.resources.getString(R.string.pref_cookie_key), "")
         return if (cookie == "") {
-            context.resources.getString(R.string.authentication_screen_title)
+            context.resources.getString(R.string.default_account_name)
         } else {
             context.getSharedPreferences(AUTHENTICATION_PREFERENCE_ROOT, Context.MODE_PRIVATE)
                     .getString(context.resources.getString(R.string.pref_username_key), "")
