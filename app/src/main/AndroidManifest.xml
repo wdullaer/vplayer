@@ -36,8 +36,17 @@
                 <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
             </intent-filter>
         </activity>
+        <meta-data android:name="android.app.default_searchable"
+            android:value="com.wdullaer.vplayer.DetailsActivity" />
         <activity android:name="com.wdullaer.vplayer.DetailsActivity"
-            android:theme="@style/Theme.Leanback.Details"/>
+            android:theme="@style/Theme.Leanback.Details">
+            <intent-filter>
+                <action android:name="android.intent.action.SEARCH" />
+            </intent-filter>
+            <meta-data
+                android:name="android.app.searchable"
+                android:resource="@xml/searchable" />
+        </activity>
         <activity android:name="com.wdullaer.vplayer.PlaybackActivity" />
         <activity android:name="com.wdullaer.vplayer.BrowseErrorActivity" />
         <activity android:name="com.wdullaer.vplayer.SearchActivity" />
@@ -55,8 +64,15 @@
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
-        <service android:name=".recommendation.RecommendationService"
+        <service android:name="com.wdullaer.vplayer.recommendation.RecommendationService"
             android:enabled="true" />
+        <provider android:name="com.wdullaer.vplayer.VRTContentProvider"
+            android:authorities="com.wdullaer.vplayer"
+            android:exported="true">
+            <path-permission
+                android:pathPrefix="/search"
+                android:readPermission="android.permission.GLOBAL_SEARCH" />
+        </provider>
     </application>
 
 </manifest>

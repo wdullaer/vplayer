@@ -9,6 +9,7 @@
 package com.wdullaer.vplayer
 
 import java.io.Serializable
+import java.util.*
 
 /**
  * Movie class represents video entity with title, description, image thumbs and video url.
@@ -24,7 +25,9 @@ data class Video(
         var detailsUrl: String? = null,
         var brand: String? = null,
         var category: String? = null,
-        var relatedVideos : List<Playlist> = listOf()
+        var relatedVideos : List<Playlist> = listOf(),
+        var duration: Long = 0L,
+        var publicationId: String = UUID.randomUUID().toString()
 ) : Serializable {
 
     override fun toString(): String {

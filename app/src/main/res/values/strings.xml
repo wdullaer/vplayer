@@ -35,6 +35,10 @@
     <string name="search_results">Search results for</string>
     <string name="default_account_name">Anonymous</string>
 
+    <!-- Global search related text -->
+    <string name="search_hint">Just Type</string>
+    <string name="search_description">Search through currently available VRT NU content</string>
+
     <!-- Error messages -->
     <string name="video_error_media_load_timeout">Media loading timed out</string>
     <string name="video_error_server_inaccessible">Media server was not reachable</string>

@@ -99,7 +99,7 @@ fun getMoviesByCategory(category : Category, callback : (Exception?, List<Video>
         when (result) {
             is Result.Success -> {
                 try {
-                    result.get().array().map { searchJsonToVideo(it as JSONObject, category.name) }
+                    result.get().array().map { suggestJsonToVideo(it as JSONObject, category.name) }
                 } catch (e : Exception) {
                     Log.e("getMoviesByCategory", "Failed to parse search json")
                     Log.e("getMoviesByCategory", e.toString())
@@ -141,7 +141,9 @@ fun getVideoDetails(video : Video, cookie : String = "", callback : (Exception?,
                                 detailsUrl = video.detailsUrl,
                                 category = video.category,
                                 relatedVideos = video.relatedVideos,
-                                videoUrl = it.videoUrl
+                                videoUrl = it.videoUrl,
+                                duration = video.duration,
+                                publicationId = video.publicationId
                         ))
                     }
                 }
@@ -222,11 +224,14 @@ fun getVideoDetails(video : Video, cookie : String = "", callback : (Exception?,
                     callback(ParserException(e, CONTENT_JSON_TO_VIDEO_ERROR), video)
                     null
                 }?.let {
+                    video.id = it.id
                     video.title = it.title
                     video.shortDescription = it.shortDescription
                     video.description = it.description
                     video.backgroundImageUrl = it.backgroundImageUrl
                     video.detailsUrl = it.detailsUrl
+                    video.duration = it.duration
+                    video.publicationId = it.publicationId
                     video.detailsUrl?.let { fetchRelatedVideos(it) }
                 }
             }
@@ -265,6 +270,8 @@ fun enrichVideo(video : Video, cookie : String, callback: (Exception?) -> Unit) 
         video.category = result.category
         video.videoUrl = result.videoUrl
         video.relatedVideos = result.relatedVideos
+        video.duration = result.duration
+        video.publicationId = result.publicationId
 
         callback(error)
     }
@@ -282,7 +289,7 @@ fun searchVideo (query : String, callback : (Exception?, Playlist) -> Unit) {
                     result.get()
                             .array()
                             .map { it as JSONObject }
-                            .map { searchJsonToVideo(it) }
+                            .map { suggestJsonToVideo(it) }
                 } catch (e : Exception) {
                     Log.e("searchVideo", "Failed to parse search json")
                     Log.e("searchVideo", e.toString())
@@ -296,6 +303,83 @@ fun searchVideo (query : String, callback : (Exception?, Playlist) -> Unit) {
                 callback(NetworkException(result.error), Playlist())
             }
         }
+    }
+}
+
+// searching for the pubId seems to always return exactly one hit: the video with that ID
+// Given that these are UUIDs it should be relatively safe to assume that this will always be the case
+fun getVideoByPubId (id : String, callback : (Exception?, Video) -> Unit) {
+    if (id == "") callback(null, Video())
+    val query = "https://search.vrt.be/search?q=$id"
+    query.httpGet().header("Accept" to JSON_MIME).responseJson {_, _, result ->
+        when (result) {
+            is Result.Success -> {
+                val matches = result.get()
+                        .obj()
+                        .getJSONArray("results")
+                if (matches.length() == 0) {
+                    Log.w("getvideoByPubId", "Could not find video with id=$id")
+                    callback(ParserException("Could not find video with id=$id", 1001), Video())
+                } else {
+                    callback(null, searchJsonToVideo(matches.getJSONObject(0)))
+                }
+            }
+            is Result.Failure -> {
+                Log.e("getVideoByPubId", "Failed to retrieve data from $query")
+                Log.e("getVideoByPubId", result.error.toString())
+                callback(NetworkException(result.error), Video())
+            }
+        }
+    }
+}
+
+fun searchVideoSync (query : String) : Playlist {
+    if (query == "") return Playlist()
+
+    val endpoint = "https://search.vrt.be/suggest?i=video&q=$query"
+    val result = endpoint.httpGet().header("Accept" to JSON_MIME).responseJson().third
+
+    return when (result) {
+        is Result.Success -> {
+            val videos = result.get()
+                    .array()
+                    .map {it as JSONObject}
+                    .map { suggestJsonToVideo(it) }
+                    .map { getVideoDetailsSync(it) }
+            Playlist(query, videos)
+        }
+        is Result.Failure -> Playlist()
+    }
+}
+
+fun getVideoDetailsSync (video : Video) : Video {
+    val detailsUrl = video.detailsUrl ?: return video
+    val content = getContentsLink(detailsUrl)
+            .httpGet()
+            .header("Accept" to JSON_MIME)
+            .responseJson()
+            .third
+
+    return when (content) {
+        is Result.Success -> {
+            try {
+                contentJsonToVideo(content.get().obj())
+            } catch (e : Exception) {
+                Log.e("getVideoDetailsSync", e.toString())
+                null
+            }?.let {
+                video.id = it.id
+                video.title = it.title
+                video.shortDescription = it.shortDescription
+                video.description = it.description
+                video.backgroundImageUrl = it.backgroundImageUrl
+                video.detailsUrl = it.detailsUrl
+                video.duration = it.duration
+                video.publicationId = it.publicationId
+            }
+            video
+        }
+        is Result.Failure -> video
     }
 }
 
@@ -325,7 +409,7 @@ private fun parseVideo (doc : Element, category : String = "") : Video {
     )
 }
 
-private fun searchJsonToVideo (json : JSONObject, category: String = "") : Video {
+private fun suggestJsonToVideo (json : JSONObject, category: String = "") : Video {
     return Video(
             id = UUID.randomUUID().mostSignificantBits,
             title = json.getString("title"),
@@ -338,6 +422,22 @@ private fun searchJsonToVideo (json : JSONObject, category: String = "") : Video
     )
 }
 
+private fun searchJsonToVideo (json : JSONObject) : Video {
+    return Video(
+            id = json.getLong("whatsonId"),
+            title = json.getString("title"),
+            description = json.getString("description"),
+            shortDescription = json.getString("shortDescription"),
+            detailsUrl = toAbsoluteUrl(json.getString("url")),
+            cardImageUrl = toAbsoluteUrl(json.getString("videoThumbnailUrl")),
+            brand = json.getJSONArray("brands").optString(0),
+            category = json.getJSONArray("categories").optString(0),
+            backgroundImageUrl = toAbsoluteUrl(json.getString("programImageUrl")),
+            publicationId = json.getString("publicationId"),
+            duration = json.getLong("duration") * 60 * 1000 // Durations are given in minutes for this API
+    )
+}
+
 private fun contentJsonToVideo (json : JSONObject) : Video {
     val backgroundImageUrl = if (json.getString("assetImage") == "") {
         json.getString("programImage")
@@ -345,12 +445,14 @@ private fun contentJsonToVideo (json : JSONObject) : Video {
         json.getString("assetImage")
     }
     return Video(
-            id = UUID.randomUUID().mostSignificantBits,
+            id = json.getLong("whatsonId"),
             title = json.getString("title"),
             shortDescription =  json.getString("shortDescription"),
             description = json.getString("description"),
             backgroundImageUrl = backgroundImageUrl,
-            detailsUrl = toAbsoluteUrl(json.getString("url"))
+            duration = json.getLong("duration"),
+            detailsUrl = toAbsoluteUrl(json.getString("url")),
+            publicationId = json.getString("publicationId")
     )
 }
 
@@ -360,6 +462,7 @@ private fun streamJsonToVideo (json : JSONObject) : Video {
             title = json.getString("title"),
             description = json.getString("description"),
             backgroundImageUrl = posterImage,
+            duration =  json.getLong("duration"),
             videoUrl = json.getJSONArray("targetUrls")
                     .filter {(it as JSONObject).getString("type") == "MPEG_DASH"}
                     .map { it as JSONObject }

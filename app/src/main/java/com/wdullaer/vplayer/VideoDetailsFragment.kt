@@ -11,6 +11,7 @@ package com.wdullaer.vplayer
 import android.app.Activity
 import android.app.NotificationManager
 import android.content.Context
+import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.support.v17.leanback.app.BackgroundManager
@@ -38,7 +39,7 @@ import android.widget.ImageView
  */
 class VideoDetailsFragment : DetailsSupportFragment() {
 
-    private lateinit var mSelectedVideo: Video
+    private var selectedVideo: Video = Video()
     private lateinit var backgroundManager : BackgroundManager
     private val windowMetrics = DisplayMetrics()
 
@@ -54,16 +55,8 @@ class VideoDetailsFragment : DetailsSupportFragment() {
         backgroundManager.attach(activity.window)
         activity.windowManager.defaultDisplay.getMetrics(windowMetrics)
 
-        mSelectedVideo = activity.intent.getSerializableExtra(DetailsActivity.VIDEO) as Video
-        val presenterSelector = ClassPresenterSelector()
-        val arrayAdapter = ArrayObjectAdapter(presenterSelector)
+        removeNotification(activity)
 
-        removeNotification(requireActivity())
-        setupDetailsOverviewRow(activity, arrayAdapter)
-        setupDetailsOverviewRowPresenter(activity, presenterSelector)
-        setupRelatedMovieListRow(arrayAdapter, presenterSelector)
-
-        adapter = arrayAdapter
         setOnItemViewClickedListener { itemViewHolder, item, _, _ ->
             if (item is Video) {
                 Log.d(TAG, "Item: " + item.toString())
@@ -76,16 +69,52 @@ class VideoDetailsFragment : DetailsSupportFragment() {
         setOnSearchClickedListener { activity.startSearchActivity() }
         searchAffordanceColor = ContextCompat.getColor(activity, R.color.search_opaque)
 
+        // We were started by the global search
+        if (Intent.ACTION_VIEW.equals(activity.intent.action, true)) {
+            getVideoByPubId(activity.intent.data.lastPathSegment) { err, video ->
+                err?.let {
+                    // TODO: distinguish between network and parsing error
+                    Toast.makeText(activity, R.string.video_error_server_inaccessible, Toast.LENGTH_LONG).show()
+                }
+                selectedVideo = video
+                init(activity, true)
+            }
+        // We were started from within the application
+        } else {
+            selectedVideo = activity.intent.getSerializableExtra(DetailsActivity.VIDEO) as Video
+            init(activity, false)
+        }
+    }
+
+    /**
+     * Fragment initialisation that can only happen once we have some basic information about
+     * the Video that needs to be shown
+     */
+    private fun init(activity : Activity, autoPlay : Boolean) {
+        val presenterSelector = ClassPresenterSelector()
+        val arrayAdapter = ArrayObjectAdapter(presenterSelector)
+
+        // TODO: make these calls more functional (pass in the video)
+        // it will make it easier to see which state needs to be present for them to do their job
+        setupDetailsOverviewRow(activity, arrayAdapter)
+        setupDetailsOverviewRowPresenter(activity, presenterSelector)
+        setupRelatedMovieListRow(arrayAdapter, presenterSelector)
+
+        adapter = arrayAdapter
+
         val cookie = activity.getSharedPreferences(AUTHENTICATION_PREFERENCE_ROOT, Context.MODE_PRIVATE)
                 .getString(activity.getString(R.string.pref_cookie_key), "")
-        enrichVideo(mSelectedVideo, cookie) {
+        // This is explicitly side effecty to avoid flickering (but we should test if we can get
+        // away with replacing the video)
+        enrichVideo(selectedVideo, cookie) {
             it?.let {
                 // TODO: distinguish between network, authorization and parsing error
                 Toast.makeText(activity, R.string.video_error_server_inaccessible, Toast.LENGTH_LONG).show()
             }
-            updateBackground(mSelectedVideo)
+            updateBackground(selectedVideo)
             updateRelatedMoviesListRow(arrayAdapter)
             arrayAdapter.notifyArrayItemRangeChanged(0, arrayAdapter.size())
+            if (autoPlay && it != null) activity.startPlaybackActivity(selectedVideo)
         }
     }
 
@@ -93,7 +122,7 @@ class VideoDetailsFragment : DetailsSupportFragment() {
         super.onResume()
         // Android doesn't seem to remember the background when coming back from another activity
         // So let's explicitly make sure it's showing
-        updateBackground(mSelectedVideo)
+        updateBackground(selectedVideo)
     }
 
     private fun removeNotification(activity: Activity) {
@@ -124,8 +153,8 @@ class VideoDetailsFragment : DetailsSupportFragment() {
     }
 
     private fun setupDetailsOverviewRow(context: Context, arrayAdapter : ArrayObjectAdapter) {
-        Log.d(TAG, "doInBackground: " + mSelectedVideo.toString())
-        val row = DetailsOverviewRow(mSelectedVideo)
+        Log.d(TAG, "doInBackground: " + selectedVideo.toString())
+        val row = DetailsOverviewRow(selectedVideo)
         row.imageDrawable = ContextCompat.getDrawable(context, R.drawable.default_background)
         val width = context.resources.getDimensionPixelSize(R.dimen.details_thumb_width)
         val height = context.resources.getDimensionPixelSize(R.dimen.details_thumb_heigth)
@@ -135,12 +164,12 @@ class VideoDetailsFragment : DetailsSupportFragment() {
                 .error(R.drawable.default_background)
         Glide.with(this)
                 .asBitmap()
-                .load(mSelectedVideo.cardImageUrl)
+                .load(selectedVideo.cardImageUrl)
                 .apply(glideOptions)
                 .into<SimpleTarget<Bitmap>>(object : SimpleTarget<Bitmap>(width, height) {
                     override fun onResourceReady(resource: Bitmap,
                                                  glideAnimation: Transition<in Bitmap>?) {
-                        Log.d(TAG, "details overview card image url ready: " + resource)
+                        Log.d(TAG, "details overview card image url ready: $resource")
                         row.setImageBitmap(activity, resource)
                         startEntranceTransition()
                     }
@@ -217,7 +246,7 @@ class VideoDetailsFragment : DetailsSupportFragment() {
         detailsPresenter.setOnActionClickedListener {
             // TODO: check that we have a videoUrl before launching playback
             if (it.id == ACTION_PLAY) {
-                activity.startPlaybackActivity(mSelectedVideo)
+                activity.startPlaybackActivity(selectedVideo)
             } else {
                 Toast.makeText(activity, it.toString(), Toast.LENGTH_SHORT).show()
             }
@@ -234,7 +263,7 @@ class VideoDetailsFragment : DetailsSupportFragment() {
         if (arrayAdapter.size() > 1) arrayAdapter.removeItems(1, arrayAdapter.size() - 1)
 
         val cardPresenter = CardPresenter()
-        val listRows = mSelectedVideo.relatedVideos.mapIndexed { index, playlist ->
+        val listRows = selectedVideo.relatedVideos.mapIndexed { index, playlist ->
             val header = HeaderItem(index.toLong(), playlist.title)
             val listRowAdapter = ArrayObjectAdapter(cardPresenter)
             listRowAdapter.addAll(0, playlist.data)
