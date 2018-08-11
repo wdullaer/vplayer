@@ -19,4 +19,6 @@
     <!-- Dimensions of the image cards -->
     <dimen name="image_card_width">313dp</dimen>
     <dimen name="image_card_height">176dp</dimen>
+    <dimen name="image_card_width_small">156dp</dimen>
+    <dimen name="image_card_height_small">88dp</dimen>
 </resources>

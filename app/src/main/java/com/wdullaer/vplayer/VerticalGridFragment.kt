@@ -30,7 +30,7 @@ class VerticalGridFragment : android.support.v17.leanback.app.VerticalGridSuppor
 
         title = category.name
 
-        val arrayAdapter = ArrayObjectAdapter(CardPresenter())
+        val arrayAdapter = ArrayObjectAdapter(CardPresenter(CardSize.SMALL))
         getMoviesByCategory(category) { error, videos ->
             error?.let {
                 // TODO: distinguish between network and parsing errors

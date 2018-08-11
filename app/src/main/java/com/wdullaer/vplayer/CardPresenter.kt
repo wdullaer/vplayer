@@ -24,7 +24,7 @@ import kotlin.properties.Delegates
  * A CardPresenter is used to generate Views and bind Objects to them on demand.
  * It contains an ImageCardView.
  */
-class CardPresenter : Presenter() {
+class CardPresenter(val size : CardSize = CardSize.LARGE) : Presenter() {
     private var mDefaultCardImage: Drawable? = null
     private var sSelectedBackgroundColor: Int by Delegates.notNull()
     private var sDefaultBackgroundColor: Int by Delegates.notNull()
@@ -83,10 +83,17 @@ class CardPresenter : Presenter() {
             cardView.titleText = title
             cardView.contentText = content
             val res = viewHolder.view.resources
-            cardView.setMainImageDimensions(
-                    res.getDimensionPixelOffset(R.dimen.image_card_width),
-                    res.getDimensionPixelOffset(R.dimen.image_card_height)
-            )
+            if (size == CardSize.LARGE) {
+                cardView.setMainImageDimensions(
+                        res.getDimensionPixelOffset(R.dimen.image_card_width),
+                        res.getDimensionPixelOffset(R.dimen.image_card_height)
+                )
+            } else {
+                cardView.setMainImageDimensions(
+                        res.getDimensionPixelOffset(R.dimen.image_card_width_small),
+                        res.getDimensionPixelOffset(R.dimen.image_card_height_small)
+                )
+            }
             val glideOptions = RequestOptions()
                     .centerCrop()
                     .error(mDefaultCardImage)
@@ -119,4 +126,8 @@ class CardPresenter : Presenter() {
     companion object {
         private const val TAG = "CardPresenter"
     }
+}
+
+enum class CardSize {
+    SMALL, LARGE
 }
