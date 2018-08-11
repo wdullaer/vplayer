@@ -73,7 +73,7 @@ fun getCategories(callback : (Exception?, List<Category>) -> Unit) {
                 try {
                     Jsoup
                             .parse(result.get())
-                            .select("li.vrtlist__item")
+                            .select("li.vrtlist__item--grid")
                             .map(::parseCategory)
                 } catch (e : Exception) {
                     Log.e("getCategories", "Failed to parse categories HTML")
@@ -232,7 +232,7 @@ fun getVideoDetails(video : Video, cookie : String = "", callback : (Exception?,
                     video.detailsUrl = it.detailsUrl
                     video.duration = it.duration
                     video.publicationId = it.publicationId
-                    video.detailsUrl?.let { fetchRelatedVideos(it) }
+                    video.detailsUrl?.let {url -> fetchRelatedVideos(url) }
                 }
             }
             is Result.Failure -> {
@@ -385,7 +385,7 @@ fun getVideoDetailsSync (video : Video) : Video {
 
 private fun parseCategory (doc : Element) : Category {
     return Category(
-            name = doc.select("h3.tile__title").first().text(),
+            name = doc.select("span.tile__title").first().text(),
             cardImageUrl = parseSrcSet(doc.select("div.tile__image").first().select("img").first().attr("srcset")),
             link = toAbsoluteUrl(doc.select("a.tile--category").first().attr("href"))
     )
