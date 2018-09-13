@@ -13,5 +13,4 @@ You will need to install it by sideloading it onto your device. A play store ver
 * Return errors from VrtData functions and render them properly
 * Add unit tests to VrtData functions
 * Add livestreams
-* Add oreo homescreen channels
 * Implement multiple authentication methods (requires using the gigya library, not happening in the short term)
