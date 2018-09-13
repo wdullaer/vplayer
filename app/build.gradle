@@ -22,6 +22,10 @@ android {
     }
 }
 
+androidExtensions {
+    experimental = true
+}
+
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
@@ -29,6 +33,7 @@ dependencies {
     implementation 'com.android.support:appcompat-v7:27.1.1'
     implementation 'com.android.support:preference-leanback-v17:27.1.1'
     implementation 'com.android.support:recommendation:27.1.1'
+    implementation 'com.android.support:support-tv-provider:27.1.1'
     implementation 'com.github.bumptech.glide:glide:4.5.0'
 
     implementation 'org.jsoup:jsoup:1.10.3'

@@ -54,11 +54,11 @@ class FirstStepFragment : GuidedStepSupportFragment() {
 
     override fun onCreateActions(actions: MutableList<GuidedAction>, savedInstanceState: Bundle?) {
         val context = requireContext()
-        val defaultUsername = context.getSharedPreferences(AUTHENTICATION_PREFERENCE_ROOT, Context.MODE_PRIVATE)
+        val defaultUsername = context.getSharedPreferences(VPLAYER_PREFERENCE_ROOT, Context.MODE_PRIVATE)
                 .getString(context.getString(R.string.pref_username_key), "")
-        val defaultPassword = context.getSharedPreferences(AUTHENTICATION_PREFERENCE_ROOT, Context.MODE_PRIVATE)
+        val defaultPassword = context.getSharedPreferences(VPLAYER_PREFERENCE_ROOT, Context.MODE_PRIVATE)
                 .getString(context.getString(R.string.pref_password_key), "")
-        val cookie = context.getSharedPreferences(AUTHENTICATION_PREFERENCE_ROOT, Context.MODE_PRIVATE)
+        val cookie = context.getSharedPreferences(VPLAYER_PREFERENCE_ROOT, Context.MODE_PRIVATE)
                 .getString(context.getString(R.string.pref_cookie_key), "")
         Log.i("AuthenticationActivity", defaultUsername)
         Log.i("AuthenticationActivity", defaultPassword.length.toString())
@@ -113,7 +113,7 @@ class FirstStepFragment : GuidedStepSupportFragment() {
                 Log.i("AuthenticationActivity", "Saving Credentials")
 
                 val context = requireContext()
-                context.getSharedPreferences(AUTHENTICATION_PREFERENCE_ROOT, Context.MODE_PRIVATE).edit()
+                context.getSharedPreferences(VPLAYER_PREFERENCE_ROOT, Context.MODE_PRIVATE).edit()
                         .putString(context.getString(R.string.pref_username_key), username)
                         .putString(context.getString(R.string.pref_password_key), password)
                         .apply()
@@ -124,7 +124,7 @@ class FirstStepFragment : GuidedStepSupportFragment() {
                 refreshVrtCookie(username, password) {error, cookie ->
                     Log.i("Authentication", "Handling cookie callback")
                     if (error == null && cookie != null) {
-                            context.getSharedPreferences(AUTHENTICATION_PREFERENCE_ROOT, Context.MODE_PRIVATE).edit()
+                            context.getSharedPreferences(VPLAYER_PREFERENCE_ROOT, Context.MODE_PRIVATE).edit()
                                     .putString(context.getString(R.string.pref_cookie_key), cookie)
                                     .apply()
 
@@ -136,7 +136,7 @@ class FirstStepFragment : GuidedStepSupportFragment() {
                     } else {
                         Toast.makeText(
                                 context,
-                                context.getString(R.string.video_error_unknown_error),
+                                context.getString(R.string.error_fragment_message),
                                 Toast.LENGTH_SHORT
                         ).show()
                     }
@@ -146,7 +146,7 @@ class FirstStepFragment : GuidedStepSupportFragment() {
             LOGOUT -> {
                 Log.i("AuthenticationActivity", "Removing credentials")
                 val context = requireContext()
-                context.getSharedPreferences(AUTHENTICATION_PREFERENCE_ROOT, Context.MODE_PRIVATE).edit()
+                context.getSharedPreferences(VPLAYER_PREFERENCE_ROOT, Context.MODE_PRIVATE).edit()
                         .remove(context.getString(R.string.pref_username_key))
                         .remove(context.getString(R.string.pref_password_key))
                         .remove(context.getString(R.string.pref_cookie_key))

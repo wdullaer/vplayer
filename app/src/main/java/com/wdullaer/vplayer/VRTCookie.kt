@@ -76,8 +76,8 @@ fun refreshVrtCookie (username : String, password : String, callback : (Exceptio
 }
 
 private fun createCookieString(cookies : List<String>) : String {
-    return cookies.map {
-        it
+    return cookies.map {cookie ->
+        cookie
                 .split(";")
                 .map { it.trim() }
                 .filterNot { it.startsWith("Secure") }

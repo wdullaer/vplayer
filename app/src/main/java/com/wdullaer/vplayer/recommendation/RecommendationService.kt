@@ -8,37 +8,41 @@
 
 package com.wdullaer.vplayer.recommendation
 
-import android.app.IntentService
 import android.app.NotificationManager
+import android.app.job.JobParameters
+import android.app.job.JobService
 import android.content.Context
-import android.content.Intent
 import android.preference.PreferenceManager
 import android.support.app.recommendation.ContentRecommendation
 import android.util.Log
 import com.bumptech.glide.Glide
-import com.wdullaer.vplayer.DetailsActivity
+import com.github.kittinunf.fuel.core.Request
 import com.wdullaer.vplayer.R
-import com.wdullaer.vplayer.Video
+import com.wdullaer.vplayer.getDetailsIntent
 import com.wdullaer.vplayer.getRecommendations
 
-class RecommendationService : IntentService("RecommendationService") {
+class RecommendationService : JobService() {
     private lateinit var notifManager : NotificationManager
+    private var runningRequest : Request? = null
 
     override fun onCreate() {
         super.onCreate()
         notifManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
     }
 
-    override fun onHandleIntent(intent: Intent?) {
+    override fun onStartJob(jobParameters : JobParameters): Boolean {
         val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this)
         if (!sharedPrefs.getBoolean(getString(R.string.pref_enable_recommendations_key), true)) {
             notifManager.cancelAll()
-            return
+            return false
         }
 
-        getRecommendations { error, playlist ->
+        runningRequest = getRecommendations { error, playlist ->
+            runningRequest = null
+
             if (error != null) {
                 Log.e("RecommendationService", "Failed to load vPlayer recommendations")
+                jobFinished(jobParameters, false)
                 return@getRecommendations
             }
 
@@ -58,24 +62,29 @@ class RecommendationService : IntentService("RecommendationService") {
                         .setText(it.shortDescription)
                         .setContentIntentData(
                                 ContentRecommendation.INTENT_TYPE_ACTIVITY,
-                                getPendingIntent(it),
+                                this.getDetailsIntent(it),
                                 0,
                                 null
                         )
                         .setContentImage(bitmap)
                         .build()
-                        .getNotificationObject(applicationContext)
+                        .getNotificationObject(this)
 
                 Log.d("RecommendationService", "Recommending video \"${it.title}\"")
                 notifManager.notify(it.id.hashCode(), notification)
             }
+
+            jobFinished(jobParameters, false)
         }
+
+        return true
     }
 
-    private fun getPendingIntent(video: Video) : Intent {
-        return Intent(this, DetailsActivity::class.java)
-                .putExtra(DetailsActivity.VIDEO, video)
-                .putExtra(DetailsActivity.NOTIFICATION, video.id.hashCode())
-                .setAction(video.id.toString())
+    override fun onStopJob(params: JobParameters): Boolean {
+        return runningRequest?.let {
+            it.cancel()
+            runningRequest = null
+            true
+        } ?: false
     }
 }

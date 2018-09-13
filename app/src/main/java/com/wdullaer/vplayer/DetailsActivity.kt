@@ -21,8 +21,8 @@ class DetailsActivity : LeanbackActivity() {
     }
 
     companion object {
-        const val SHARED_ELEMENT_NAME = "hero"
-        const val VIDEO = "Video"
-        const val NOTIFICATION = "Notification"
+        const val SHARED_ELEMENT_NAME = "com.wdullaer.vplayer.DetailsActivity.HERO"
+        const val VIDEO = "com.wdullaer.vlplayer.DetailsActivity.VIDEO"
+        const val NOTIFICATION = "com.wdullaer.vplayer.DetailsActivity.NOTIFICATION"
     }
 }

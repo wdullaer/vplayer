@@ -8,30 +8,48 @@
 
 package com.wdullaer.vplayer.recommendation
 
-import android.app.AlarmManager
-import android.app.PendingIntent
+import android.app.job.JobInfo
+import android.app.job.JobScheduler
 import android.content.BroadcastReceiver
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.os.Build
+import android.support.media.tv.TvContractCompat
+import java.util.concurrent.TimeUnit
 
 /*
  * This class extends BroadcastReceiver and publishes Recommendations when received.
  */
 class RecommendationReceiver : BroadcastReceiver() {
-    val INITIAL_DELAY = 5000L
-
     override fun onReceive(context: Context, intent: Intent) {
+        val scheduler = context.getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
         if (intent.action == Intent.ACTION_BOOT_COMPLETED) {
-            scheduleRecommendationUpdate(context)
+            scheduleRecommendationUpdate(context, scheduler)
+            scheduleChannelUpdate(context, scheduler)
+        } else if (intent.action == TvContractCompat.ACTION_INITIALIZE_PROGRAMS) {
+            scheduleChannelUpdate(context, scheduler)
         }
     }
-
-    private fun scheduleRecommendationUpdate(context: Context) {
-        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        val recommendationIntent = Intent(context, RecommendationService::class.java)
-        val alarmIntent = PendingIntent.getService(context, 0, recommendationIntent, 0)
-
-        alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, INITIAL_DELAY,
-                AlarmManager.INTERVAL_HALF_HOUR, alarmIntent)
-    }
 }
+
+fun scheduleRecommendationUpdate(context: Context, scheduler: JobScheduler) {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) return
+    val jobInfo = JobInfo.Builder(RECOMMENDATION_JOB_ID, ComponentName(context, RecommendationService::class.java))
+            .setPeriodic(TimeUnit.MINUTES.toMillis(30))
+            .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+            .build()
+    scheduler.schedule(jobInfo)
+}
+
+fun scheduleChannelUpdate(context: Context, scheduler: JobScheduler) {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
+    val jobInfo = JobInfo.Builder(CHANNEL_JOB_ID, ComponentName(context, ChannelService::class.java))
+            .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+            .build()
+    scheduler.schedule(jobInfo)
+}
+
+const val RECOMMENDATION_JOB_ID = 1001
+const val CHANNEL_JOB_ID = 1002
+const val CHANNEL_PROGRAM_JOB_ID = 1003

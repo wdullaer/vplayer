@@ -8,12 +8,14 @@
 
 package com.wdullaer.vplayer
 
-import java.io.Serializable
+import android.os.Parcelable
+import kotlinx.android.parcel.Parcelize
 import java.util.*
 
 /**
  * Movie class represents video entity with title, description, image thumbs and video url.
  */
+@Parcelize
 data class Video(
         var id: Long = 0,
         var title: String? = null,
@@ -28,10 +30,10 @@ data class Video(
         var relatedVideos : List<Playlist> = listOf(),
         var duration: Long = 0L,
         var publicationId: String = UUID.randomUUID().toString()
-) : Serializable {
+) : Parcelable {
 
     override fun toString(): String {
-        return "Movie{" +
+        return "Video{" +
                 "id=" + id +
                 ", title='" + title + '\'' +
                 ", videoUrl='" + videoUrl + '\'' +
@@ -39,9 +41,5 @@ data class Video(
                 ", backgroundImageUrl='" + backgroundImageUrl + '\'' +
                 ", cardImageUrl='" + cardImageUrl + '\'' +
                 '}'
-    }
-
-    companion object {
-        internal const val serialVersionUID = 727566175075960653L
     }
 }

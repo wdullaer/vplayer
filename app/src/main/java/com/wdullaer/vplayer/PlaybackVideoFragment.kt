@@ -84,7 +84,7 @@ class PlaybackVideoFragment : VideoSupportFragment() {
         // No point showing a player if we don't have an activity to show it on
         val nActivity = activity ?: return
         // Parse the intent for the target video
-        val video = nActivity.intent.getSerializableExtra(DetailsActivity.VIDEO) as Video
+        val video = nActivity.intent.getParcelableExtra(DetailsActivity.VIDEO) as Video
         // Create a simple ExoPlayer
         val bandwidthMeter = DefaultBandwidthMeter()
         val videoTrackSelectionFactory = AdaptiveTrackSelection.Factory(bandwidthMeter)

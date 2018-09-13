@@ -9,8 +9,8 @@
 package com.wdullaer.vplayer
 
 import android.app.Activity
+import android.app.job.JobScheduler
 import android.content.Context
-import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
 import java.util.Timer
@@ -32,7 +32,8 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import com.bumptech.glide.request.target.SimpleTarget
 import com.bumptech.glide.request.transition.Transition
-import com.wdullaer.vplayer.recommendation.RecommendationService
+import com.wdullaer.vplayer.recommendation.scheduleChannelUpdate
+import com.wdullaer.vplayer.recommendation.scheduleRecommendationUpdate
 import kotlin.properties.Delegates
 import kotlin.concurrent.schedule
 
@@ -186,7 +187,9 @@ class MainFragment : BrowseSupportFragment() {
     }
 
     private fun updateRecommendations(activity : Activity) {
-        activity.startService(Intent(activity, RecommendationService::class.java))
+        val scheduler = activity.getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
+        scheduleRecommendationUpdate(activity, scheduler)
+        scheduleChannelUpdate(activity, scheduler)
     }
 
     private fun updateBackground(uri: String?) {
@@ -220,12 +223,12 @@ class MainFragment : BrowseSupportFragment() {
     }
 
     private fun getAccountName(context : Context) : String {
-        val cookie = context.getSharedPreferences(AUTHENTICATION_PREFERENCE_ROOT, Context.MODE_PRIVATE)
+        val cookie = context.getSharedPreferences(VPLAYER_PREFERENCE_ROOT, Context.MODE_PRIVATE)
                 .getString(context.resources.getString(R.string.pref_cookie_key), "")
         return if (cookie == "") {
             context.resources.getString(R.string.default_account_name)
         } else {
-            context.getSharedPreferences(AUTHENTICATION_PREFERENCE_ROOT, Context.MODE_PRIVATE)
+            context.getSharedPreferences(VPLAYER_PREFERENCE_ROOT, Context.MODE_PRIVATE)
                     .getString(context.resources.getString(R.string.pref_username_key), "")
         }
     }

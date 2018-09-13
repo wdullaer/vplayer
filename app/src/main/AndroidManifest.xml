@@ -5,6 +5,8 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="com.android.providers.tv.permission.READ_EPG_DATA"/>
+    <uses-permission android:name="com.android.providers.tv.permission.WRITE_EPG_DATA"/>
 
     <uses-feature
         android:name="android.hardware.touchscreen"
@@ -63,8 +65,18 @@
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
+            <intent-filter>
+                <action android:name="android.media.tv.action.INITIALIZE_PROGRAMS" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
         </receiver>
         <service android:name="com.wdullaer.vplayer.recommendation.RecommendationService"
+            android:enabled="true" />
+        <service android:name="com.wdullaer.vplayer.recommendation.ChannelService"
+            android:permission="android.permission.BIND_JOB_SERVICE"
+            android:enabled="true" />
+        <service android:name="com.wdullaer.vplayer.recommendation.ChannelProgramService"
+            android:permission="android.permission.BIND_JOB_SERVICE"
             android:enabled="true" />
         <provider android:name="com.wdullaer.vplayer.VRTContentProvider"
             android:authorities="com.wdullaer.vplayer"

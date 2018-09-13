@@ -8,7 +8,8 @@
 
 package com.wdullaer.vplayer
 
-import java.io.Serializable
+import android.os.Parcelable
+import kotlinx.android.parcel.Parcelize
 
 /**
  * Model of a VRT Nu Category
@@ -16,8 +17,9 @@ import java.io.Serializable
  * Created by wdullaer on 8/10/17.
  */
 
+@Parcelize
 data class Category(
         var name : String = "",
         var cardImageUrl : String? = null,
         var link : String? = null
-) : Serializable
+) : Parcelable

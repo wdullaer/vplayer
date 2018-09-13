@@ -12,13 +12,19 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.drawable.VectorDrawable
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.support.v4.app.ActivityOptionsCompat
 import android.support.v4.app.FragmentActivity
+import android.support.v4.content.ContextCompat
 import android.view.View
 import com.google.android.exoplayer2.util.Util
 import org.json.JSONArray
+import java.io.Serializable
 
 /**
  * Defines useful extension functions and properties that would otherwise go into a Utils class
@@ -119,6 +125,17 @@ fun Activity.startSearchActivity() {
 }
 
 /**
+ * Get an Intent to start the DetailsActivity showing a particular Video
+ */
+fun Context.getDetailsIntent(video: Video): Intent {
+    return Intent(this, DetailsActivity::class.java)
+            .putExtra(DetailsActivity.VIDEO, video)
+            .putExtra(DetailsActivity.NOTIFICATION, video.id.hashCode())
+            .setAction(Intent.ACTION_VIEW)
+            .setData(Uri.parse("content://com.wdullaer.vplayer/video/" + video.publicationId))
+}
+
+/**
  * JSONArray does not inherit from java collections
  * This adds the filter function that we would get if it did
  */
@@ -140,6 +157,20 @@ fun <T> JSONArray.map(transform : (Any) -> T) : List<T> {
 fun Context.convertDpToPixel(dp: Int) : Int {
     val density = this.applicationContext.resources.displayMetrics.density
     return Math.round(dp.toFloat() * density)
+}
+
+fun Context.vectorToBitmap(resId: Int): Bitmap? {
+    val drawable = (ContextCompat.getDrawable(this, resId) ?: return null) as? VectorDrawable
+            ?: throw IllegalArgumentException("ResId should refer to a VectorDrawable")
+    val bitmap = Bitmap.createBitmap(
+            drawable.intrinsicWidth,
+            drawable.intrinsicHeight,
+            Bitmap.Config.ARGB_8888
+    )
+    val canvas = Canvas(bitmap)
+    drawable.setBounds(0, 0, canvas.width, canvas.height)
+    drawable.draw(canvas)
+    return bitmap
 }
 
 const val INTENT_CATEGORY = "category"

@@ -10,6 +10,7 @@ package com.wdullaer.vplayer
 
 import android.util.Log
 import com.github.kittinunf.fuel.android.extension.responseJson
+import com.github.kittinunf.fuel.core.Request
 import com.github.kittinunf.fuel.httpGet
 import com.github.kittinunf.result.Result
 import org.json.JSONObject
@@ -34,7 +35,7 @@ const val VRT_BASE_PATH = "https://www.vrt.be"
 const val HTML_MIME = "text/html"
 const val JSON_MIME = "application/json"
 
-fun getLandingPage(defaultTitle: String, callback : (Exception?, List<Playlist>) -> Unit) {
+fun getLandingPage(defaultTitle: String, callback : (Exception?, List<Playlist>) -> Unit): Request {
     fun parseLists(doc : Element) : Playlist {
         val title = doc.select("h2.vrtlist__title").first()?.text()?.trim()?.capitalize()
         val data = doc.select("li.vrtlist__item").map { parseVideo(it) }
@@ -43,7 +44,7 @@ fun getLandingPage(defaultTitle: String, callback : (Exception?, List<Playlist>)
 
     val endpoint = "$VRT_BASE_PATH/vrtnu"
     Log.i("getLandingpage", "Fetching data from $endpoint")
-    endpoint.httpGet().header("Accept" to HTML_MIME).responseString {_, _, result ->
+    return endpoint.httpGet().header("Accept" to HTML_MIME).responseString {_, _, result ->
         when (result) {
             is Result.Success -> {
                 try {
@@ -244,15 +245,15 @@ fun getVideoDetails(video : Video, cookie : String = "", callback : (Exception?,
     }
 }
 
-fun getRecommendations(callback: (Exception?, Playlist) -> Unit) {
+fun getRecommendations(callback: (Exception?, Playlist) -> Unit): Request {
     // The VRTNU landingpage kind of acts as a recommendation service
     // We'll return the first 2 lists of whatever is on the landingpage
-    getLandingPage("Recommendations") { error, playlists ->
+    return getLandingPage("Recommendations") { error, playlists ->
         // The http library runs its callbacks on the UI thread, but recommendations should be
         // fetched on a background thread. So we have to fork a new thread before doing anything else
         thread {
             val result = playlists.subList(0, 2)
-                    .reduce { acc, playlist ->  Playlist(acc.title, acc.data.plus(playlist.data))}
+                    .reduce { acc, playlist ->  Playlist(acc.title, acc.data.plus(playlist.data.map(::getVideoDetailsSync))) }
             callback(error, result)
         }
     }

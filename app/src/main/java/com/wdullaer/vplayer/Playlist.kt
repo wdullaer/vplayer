@@ -8,13 +8,15 @@
 
 package com.wdullaer.vplayer
 
-import java.io.Serializable
+import android.os.Parcelable
+import kotlinx.android.parcel.Parcelize
 
 /**
  * Model for a list of Videos with a title (because associative maps of Any are annoying to work with in Kotlin)
  * Created by wdullaer on 16/10/17.
  */
+@Parcelize
 data class Playlist (
         val title : String = "Playlist",
         val data : List<Video> = listOf()
-) : Serializable
+) : Parcelable

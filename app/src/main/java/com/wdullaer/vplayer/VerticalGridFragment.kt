@@ -26,7 +26,7 @@ class VerticalGridFragment : android.support.v17.leanback.app.VerticalGridSuppor
         super.onCreate(savedInstanceState)
         Log.i("VerticalGridFragment", "onCreate")
 
-        val category = requireActivity().intent.getSerializableExtra(INTENT_CATEGORY) as Category
+        val category = requireActivity().intent.getParcelableExtra(INTENT_CATEGORY) as Category
 
         title = category.name
 

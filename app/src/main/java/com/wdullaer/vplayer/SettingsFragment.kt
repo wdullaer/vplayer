@@ -47,7 +47,7 @@ class SettingsFragment : LeanbackSettingsFragment(), DialogPreference.TargetFrag
         val fragment = VRTPrefsFragment()
         val args = Bundle()
         args.putInt(PREFERENCE_RESOURCE_ID, resId)
-        args.putString(AUTHENTICATION_PREFERENCE_ROOT, root)
+        args.putString(VPLAYER_PREFERENCE_ROOT, root)
         fragment.arguments = args
         return fragment
     }
@@ -55,7 +55,7 @@ class SettingsFragment : LeanbackSettingsFragment(), DialogPreference.TargetFrag
 
 class VRTPrefsFragment : LeanbackPreferenceFragment() {
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
-        val root = arguments.getString(AUTHENTICATION_PREFERENCE_ROOT)
+        val root = arguments.getString(VPLAYER_PREFERENCE_ROOT)
         val prefResId = arguments.getInt(PREFERENCE_RESOURCE_ID)
 
         if (root == null) {
@@ -74,4 +74,4 @@ class VRTPrefsFragment : LeanbackPreferenceFragment() {
 }
 
 const val PREFERENCE_RESOURCE_ID = "preference_resource"
-const val AUTHENTICATION_PREFERENCE_ROOT = "authentication"
+const val VPLAYER_PREFERENCE_ROOT = "vplayer"
