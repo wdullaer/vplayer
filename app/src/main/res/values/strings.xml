@@ -23,6 +23,7 @@
     <string name="pref_login_key" translatable="false">pref_login</string>
     <string name="pref_login_title">VRT Account</string>
     <string name="pref_cookie_key" translatable="false">pref_cookie</string>
+    <string name="pref_default_channel_id_key" translatable="false">pref_default_channel_id</string>
     <string name="pref_enable_recommendations_key" translatable="false">pref_enable_recommendations</string>
     <string name="pref_enable_recommendations_title">Show recommendations</string>
     <string name="pref_enable_recommendations_summary_on">Recommendations will be shown on the homesreen</string>
@@ -34,8 +35,6 @@
     <string name="pref_action_refresh">Refresh Login</string>
     <string name="search_results">Search results for</string>
     <string name="default_account_name">Anonymous</string>
-
-    <string name="pref_default_channel_id_key">pref_default_channel_id</string>
 
     <!-- Global search related text -->
     <string name="search_hint">Just Type</string>
