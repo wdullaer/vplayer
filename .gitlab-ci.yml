@@ -3,8 +3,9 @@ image: registry.gitlab.com/showcheap/android-ci:master
 before_script:
   - export GRADLE_USER_HOME=`pwd`/.gradle
   - chmod +x ./gradlew
-  - sdkmanager "platforms;android-27"
-  - sdkmanager "build-tools;27.0.3"
+  - sdkmanager --update > update.log
+  - sdkmanager "platforms;android-27" > install-platform.log
+  - sdkmanager "build-tools;27.0.3" > install-buildtools.log
 
 cache:
   key: "$CI_COMMIT_REF_NAME"
