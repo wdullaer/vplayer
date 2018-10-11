@@ -17,19 +17,20 @@ import org.json.JSONObject
 const val API_KEY = "3_qhEcPa5JGFROVwu5SWKqJ4mVOIkwlFNMSKwzPDAh8QZOtHqu6L4nD5Q7lk0eXOOG"
 
 fun refreshVrtCookie (username : String, password : String, callback : (Exception?, String?) -> Unit) {
-    // TODO: This first call could be generalised to authorise with other services
     // https://developers.gigya.com/display/GD/accounts.login+REST
     // Ideally this should be in a separate function
     val tokenParameters = listOf(
             "loginID" to username,
             "password" to password,
             "APIKey" to API_KEY,
+            "sessionExpiration" to "-1",
+            "loginMode" to "standard",
             "targetEnv" to "jssdk",
             "includeSSOToken" to "true",
             "authMode" to "cookie",
             "httpStatusCodes" to "true"
     )
-    "https://accounts.eu1.gigya.com/accounts.login".httpPost(tokenParameters)
+    "https://accounts.vrt.be/accounts.login".httpPost(tokenParameters)
             .header("Accept" to JSON_MIME)
             .responseJson { _, _, result ->
                 when (result) {
@@ -47,18 +48,20 @@ fun refreshVrtCookie (username : String, password : String, callback : (Exceptio
                                 "ts" to tokenResult.getString("signatureTimestamp"),
                                 "email" to username
                         ))
-                        "https://token.vrt.be".httpPost()
-                                .header("Content-Type" to JSON_MIME,
-                                        "Referer" to "https://www.vrt.be/vrtnu/",
-                                        "Origin" to "https://www.vrt.be")
-                                .body(cookiePayload.toString(), charset("UTF-8"))
-                                .response { _, response, result2 ->
+                        "https://token.vrt.be/"
+                                .httpPost()
+                                .header(mapOf("content-type" to JSON_MIME,
+                                        "Referer" to "https://www.vrt.be/vrtnu",
+                                        "Origin" to "https://www.vrt.be"))
+                                .body(cookiePayload.toString().toByteArray())
+                                .response { request, response, result2 ->
                                     when (result2) {
                                         is Result.Success -> {
                                             val output = createCookieString(response.headers["Set-Cookie"].orEmpty())
                                             callback(null, output)
                                         }
                                         is Result.Failure -> {
+                                            Log.i("VRTCookie", request.cUrlString())
                                             Log.e("VRTCookie", "Failed to refresh VRT Cookie (could not obtain cookies)")
                                             Log.e("VRTCookie", result2.error.toString())
                                             callback(result2.error, null)
@@ -76,13 +79,15 @@ fun refreshVrtCookie (username : String, password : String, callback : (Exceptio
 }
 
 private fun createCookieString(cookies : List<String>) : String {
-    return cookies.map {cookie ->
+    return cookies.asSequence().map {cookie ->
         cookie
                 .split(";")
+                .asSequence()
                 .map { it.trim() }
                 .filterNot { it.startsWith("Secure") }
                 .filterNot { it.startsWith("Expires") }
                 .filterNot { it.startsWith("HttpOnly") }
                 .filterNot { it.startsWith("Domain") }
+                .toList()
     }.reduce { acc, list -> acc + list }.joinToString(";")
 }

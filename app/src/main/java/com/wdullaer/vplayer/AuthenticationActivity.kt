@@ -10,10 +10,10 @@ package com.wdullaer.vplayer
 
 import android.content.Context
 import android.os.Bundle
-import android.support.v17.leanback.app.GuidedStepSupportFragment
-import android.support.v17.leanback.widget.GuidanceStylist
-import android.support.v17.leanback.widget.GuidedAction
-import android.support.v4.app.FragmentActivity
+import androidx.leanback.app.GuidedStepSupportFragment
+import androidx.leanback.widget.GuidanceStylist
+import androidx.leanback.widget.GuidedAction
+import androidx.fragment.app.FragmentActivity
 import android.text.InputType
 import android.util.Log
 import android.widget.Toast
@@ -69,6 +69,7 @@ class FirstStepFragment : GuidedStepSupportFragment() {
                 .title(context.getString(R.string.pref_username_title))
                 .descriptionEditable(true)
                 .editDescription(defaultUsername)
+                .descriptionEditInputType(InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS.or(InputType.TYPE_CLASS_TEXT))
                 .build()
         val password = GuidedAction
                 .Builder(context)

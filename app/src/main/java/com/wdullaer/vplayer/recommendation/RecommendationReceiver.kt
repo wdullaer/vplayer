@@ -15,7 +15,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.os.Build
-import android.support.media.tv.TvContractCompat
+import androidx.tvprovider.media.tv.TvContractCompat
 import java.util.concurrent.TimeUnit
 
 /*

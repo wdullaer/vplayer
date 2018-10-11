@@ -12,10 +12,10 @@ import android.app.Activity
 import android.app.PictureInPictureParams
 import android.content.Context
 import android.os.Build
-import android.support.v17.leanback.media.PlaybackTransportControlGlue
-import android.support.v17.leanback.widget.Action
-import android.support.v17.leanback.widget.ArrayObjectAdapter
-import android.support.v17.leanback.widget.PlaybackControlsRow
+import androidx.leanback.media.PlaybackTransportControlGlue
+import androidx.leanback.widget.Action
+import androidx.leanback.widget.ArrayObjectAdapter
+import androidx.leanback.widget.PlaybackControlsRow
 
 import com.google.android.exoplayer2.ext.leanback.LeanbackPlayerAdapter
 import java.util.*
@@ -28,11 +28,11 @@ import kotlin.concurrent.schedule
  * following actions to the primary and secondary controls:
  *
  *
- *  * [android.support.v17.leanback.widget.PlaybackControlsRow.PictureInPictureAction]
- *  * [android.support.v17.leanback.widget.PlaybackControlsRow.SkipPreviousAction]
- *  * [android.support.v17.leanback.widget.PlaybackControlsRow.SkipNextAction]
- *  * [android.support.v17.leanback.widget.PlaybackControlsRow.FastForwardAction]
- *  * [android.support.v17.leanback.widget.PlaybackControlsRow.RewindAction]
+ *  * [androidx.leanback.widget.PlaybackControlsRow.PictureInPictureAction]
+ *  * [androidx.leanback.widget.PlaybackControlsRow.SkipPreviousAction]
+ *  * [androidx.leanback.widget.PlaybackControlsRow.SkipNextAction]
+ *  * [androidx.leanback.widget.PlaybackControlsRow.FastForwardAction]
+ *  * [androidx.leanback.widget.PlaybackControlsRow.RewindAction]
  *
  *
  * Note that the superclass, [PlaybackTransportControlGlue], manages the playback controls

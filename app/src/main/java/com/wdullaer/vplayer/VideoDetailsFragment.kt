@@ -14,10 +14,10 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Bundle
-import android.support.v17.leanback.app.BackgroundManager
-import android.support.v17.leanback.app.DetailsSupportFragment
-import android.support.v17.leanback.widget.*
-import android.support.v4.content.ContextCompat
+import androidx.leanback.app.BackgroundManager
+import androidx.leanback.app.DetailsSupportFragment
+import androidx.leanback.widget.*
+import androidx.core.content.ContextCompat
 import android.util.DisplayMetrics
 import android.util.Log
 import android.widget.Toast
@@ -28,8 +28,8 @@ import com.bumptech.glide.request.target.SimpleTarget
 import com.bumptech.glide.request.transition.Transition
 import android.view.ViewGroup
 import android.view.LayoutInflater
-import android.support.v17.leanback.widget.Presenter
-import android.support.v17.leanback.widget.DetailsOverviewRow
+import androidx.leanback.widget.Presenter
+import androidx.leanback.widget.DetailsOverviewRow
 import android.widget.ImageView
 
 
@@ -202,15 +202,15 @@ class VideoDetailsFragment : DetailsSupportFragment() {
                 viewHolder?.logoViewHolder?.view?.let {
                     val lp = it.layoutParams as ViewGroup.MarginLayoutParams
                     lp.marginStart = it.resources.getDimensionPixelSize(
-                            android.support.v17.leanback.R.dimen.lb_details_v2_logo_margin_start
+                            androidx.leanback.R.dimen.lb_details_v2_logo_margin_start
                     )
                     lp.topMargin = it.resources.getDimensionPixelSize(
-                            android.support.v17.leanback.R.dimen.lb_details_v2_blank_height
+                            androidx.leanback.R.dimen.lb_details_v2_blank_height
                     ) - lp.height / 2
                     val offset = it.resources.getDimensionPixelSize(
-                            android.support.v17.leanback.R.dimen.lb_details_v2_actions_height
+                            androidx.leanback.R.dimen.lb_details_v2_actions_height
                     ) + it.resources.getDimensionPixelSize(
-                            android.support.v17.leanback.R.dimen.lb_details_v2_description_margin_top
+                            androidx.leanback.R.dimen.lb_details_v2_description_margin_top
                     ) + (lp.height / 2)
 
                     when (viewHolder.state) {

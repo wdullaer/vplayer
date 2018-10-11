@@ -9,15 +9,15 @@
 package com.wdullaer.vplayer
 
 import android.os.Bundle
-import android.support.v4.content.ContextCompat
+import androidx.core.content.ContextCompat
 import android.view.View
 import java.io.PrintWriter
 import java.io.StringWriter
 
 /**
- * This class demonstrates how to extend [android.support.v17.leanback.app.ErrorFragment].
+ * This class demonstrates how to extend [androidx.leanback.app.ErrorFragment].
  */
-class ErrorFragment : android.support.v17.leanback.app.ErrorSupportFragment() {
+class ErrorFragment : androidx.leanback.app.ErrorSupportFragment() {
     var error : ParserException? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {

@@ -16,11 +16,11 @@ import android.graphics.drawable.Drawable
 import java.util.Timer
 
 import android.os.Bundle
-import android.support.v17.leanback.app.BackgroundManager
-import android.support.v17.leanback.app.BrowseSupportFragment
-import android.support.v17.leanback.widget.*
-import android.support.v4.app.FragmentActivity
-import android.support.v4.content.ContextCompat
+import androidx.leanback.app.BackgroundManager
+import androidx.leanback.app.BrowseSupportFragment
+import androidx.leanback.widget.*
+import androidx.fragment.app.FragmentActivity
+import androidx.core.content.ContextCompat
 import android.util.DisplayMetrics
 import android.util.Log
 import android.view.ViewGroup
@@ -205,7 +205,7 @@ class MainFragment : BrowseSupportFragment() {
                 .asBitmap()
                 .load(uri)
                 .apply(glideOptions)
-                .into<SimpleTarget<Bitmap>>(object : SimpleTarget<Bitmap>(width, height) {
+                .into(object : SimpleTarget<Bitmap>(width, height) {
                     override fun onResourceReady(bitmap: Bitmap,
                                                  glideAnimation: Transition<in Bitmap>?) {
                         mBackgroundManager.setBitmap(bitmap)

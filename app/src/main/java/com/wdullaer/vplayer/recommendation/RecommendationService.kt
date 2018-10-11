@@ -13,7 +13,7 @@ import android.app.job.JobParameters
 import android.app.job.JobService
 import android.content.Context
 import android.preference.PreferenceManager
-import android.support.app.recommendation.ContentRecommendation
+import androidx.recommendation.app.ContentRecommendation
 import android.util.Log
 import com.bumptech.glide.Glide
 import com.github.kittinunf.fuel.core.Request

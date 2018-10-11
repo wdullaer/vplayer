@@ -10,9 +10,10 @@ package com.wdullaer.vplayer
 
 import android.os.Bundle
 import android.os.Handler
-import android.support.v17.leanback.widget.ArrayObjectAdapter
-import android.support.v17.leanback.widget.ImageCardView
-import android.support.v17.leanback.widget.VerticalGridPresenter
+import androidx.leanback.app.VerticalGridSupportFragment
+import androidx.leanback.widget.ArrayObjectAdapter
+import androidx.leanback.widget.ImageCardView
+import androidx.leanback.widget.VerticalGridPresenter
 import android.util.Log
 import android.widget.Toast
 
@@ -21,7 +22,7 @@ import android.widget.Toast
  *
  * Created by wdullaer on 23/10/17.
  */
-class VerticalGridFragment : android.support.v17.leanback.app.VerticalGridSupportFragment() {
+class VerticalGridFragment : VerticalGridSupportFragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Log.i("VerticalGridFragment", "onCreate")

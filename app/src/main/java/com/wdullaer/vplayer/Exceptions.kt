@@ -8,7 +8,7 @@
 
 package com.wdullaer.vplayer
 
-import android.support.annotation.StringRes
+import androidx.annotation.StringRes
 
 class AuthorizationException : Exception {
     constructor() : super()

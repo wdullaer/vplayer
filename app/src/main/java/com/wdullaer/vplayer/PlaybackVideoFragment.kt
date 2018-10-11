@@ -10,9 +10,9 @@ package com.wdullaer.vplayer
 
 import android.net.Uri
 import android.os.Build
-import android.support.v17.leanback.app.VideoSupportFragment
-import android.support.v17.leanback.app.VideoSupportFragmentGlueHost
-import android.support.v17.leanback.media.PlaybackGlue
+import androidx.leanback.app.VideoSupportFragment
+import androidx.leanback.app.VideoSupportFragmentGlueHost
+import androidx.leanback.media.PlaybackGlue
 import android.util.Log
 import com.google.android.exoplayer2.ext.leanback.LeanbackPlayerAdapter
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector

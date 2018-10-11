@@ -18,13 +18,12 @@ import android.graphics.drawable.VectorDrawable
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.support.v4.app.ActivityOptionsCompat
-import android.support.v4.app.FragmentActivity
-import android.support.v4.content.ContextCompat
+import androidx.core.app.ActivityOptionsCompat
+import androidx.fragment.app.FragmentActivity
+import androidx.core.content.ContextCompat
 import android.view.View
 import com.google.android.exoplayer2.util.Util
 import org.json.JSONArray
-import java.io.Serializable
 
 /**
  * Defines useful extension functions and properties that would otherwise go into a Utils class

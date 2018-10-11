@@ -9,8 +9,8 @@
 package com.wdullaer.vplayer
 
 import android.os.Bundle
-import android.support.v17.leanback.app.SearchSupportFragment
-import android.support.v17.leanback.widget.*
+import androidx.leanback.app.SearchSupportFragment
+import androidx.leanback.widget.*
 import android.widget.Toast
 import java.util.*
 import kotlin.concurrent.schedule
