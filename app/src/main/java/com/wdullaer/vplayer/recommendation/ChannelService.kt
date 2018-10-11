@@ -217,7 +217,7 @@ class ChannelProgramService : JobService() {
                 .setChannelId(channelId)
                 .setType(TvContractCompat.PreviewProgramColumns.TYPE_CLIP)
                 .setTitle(video.title)
-                .setDescription(video.description)
+                .setDescription(video.shortDescription)
                 .setPosterArtUri(Uri.parse(video.cardImageUrl))
                 .setIntent(this.getDetailsIntent(video))
                 .setThumbnailUri(Uri.parse(video.cardImageUrl))

@@ -100,7 +100,10 @@ fun getMoviesByCategory(category : Category, callback : (Exception?, List<Video>
         when (result) {
             is Result.Success -> {
                 try {
-                    result.get().array().map { suggestJsonToVideo(it as JSONObject, category.name) }
+                    result.get()
+                            .array()
+                            .map { suggestJsonToVideo(it as JSONObject, category.name) }
+                            .toList()
                 } catch (e : Exception) {
                     Log.e("getMoviesByCategory", "Failed to parse search json")
                     Log.e("getMoviesByCategory", e.toString())
@@ -291,6 +294,7 @@ fun searchVideo (query : String, callback : (Exception?, Playlist) -> Unit) {
                             .array()
                             .map { it as JSONObject }
                             .map { suggestJsonToVideo(it) }
+                            .toList()
                 } catch (e : Exception) {
                     Log.e("searchVideo", "Failed to parse search json")
                     Log.e("searchVideo", e.toString())
@@ -347,6 +351,7 @@ fun searchVideoSync (query : String) : Playlist {
                     .map {it as JSONObject}
                     .map { suggestJsonToVideo(it) }
                     .map { getVideoDetailsSync(it) }
+                    .toList()
             Playlist(query, videos)
         }
         is Result.Failure -> Playlist()
@@ -371,8 +376,8 @@ fun getVideoDetailsSync (video : Video) : Video {
             }?.let {
                 video.id = it.id
                 video.title = it.title
-                video.shortDescription = it.shortDescription
-                video.description = it.description
+                video.shortDescription = sanitizeText(it.shortDescription ?: it.description ?: "")
+                video.description = sanitizeText(it.description ?: "")
                 video.backgroundImageUrl = it.backgroundImageUrl
                 video.detailsUrl = it.detailsUrl
                 video.duration = it.duration
@@ -508,9 +513,10 @@ private fun getContentsLink(link : String) : String {
 }
 
 private fun sanitizeText(text : String) : String {
-    var output = text.trim()
-    if (output.startsWith("<p>")) output = output.drop(3).dropLast(4)
-    return output
+    return Jsoup.parseBodyFragment(text)
+            .body()
+            .select("p")
+            .joinToString("\n") { it.text() }
 }
 
 private fun toAbsoluteUrl(url : String?) : String {

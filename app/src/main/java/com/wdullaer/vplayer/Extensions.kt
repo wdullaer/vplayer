@@ -138,8 +138,9 @@ fun Context.getDetailsIntent(video: Video): Intent {
  * JSONArray does not inherit from java collections
  * This adds the filter function that we would get if it did
  */
-fun JSONArray.filter(predicate : (Any) -> Boolean) : List<Any> {
-    return (0 until this.length())
+fun JSONArray.filter(predicate : (Any) -> Boolean) : Sequence<Any> {
+    return generateSequence(0) { it + 1 }
+            .take(this.length())
             .filter { predicate(this.get(it)) }
             .map { this.get(it) }
 }
@@ -148,8 +149,9 @@ fun JSONArray.filter(predicate : (Any) -> Boolean) : List<Any> {
  * JSONArray does not inherit from java collections
  * This adds the map function
  */
-fun <T> JSONArray.map(transform : (Any) -> T) : List<T> {
-    return (0 until this.length())
+fun <T> JSONArray.map(transform : (Any) -> T) : Sequence<T> {
+    return generateSequence(0) { it + 1 }
+            .take(this.length())
             .map { transform(this.get(it)) }
 }
 
