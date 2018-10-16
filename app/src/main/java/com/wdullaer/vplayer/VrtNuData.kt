@@ -134,13 +134,12 @@ fun getVideoDetails(video : Video, cookie : String = "", callback : (Exception?,
                         callback(ParserException(e, STREAM_JSON_TO_VIDEO_ERROR), video)
                         null
                     }?.let {
-                        val bgUrl = if (it.backgroundImageUrl != "") it.backgroundImageUrl else video.backgroundImageUrl
                         callback(null, Video(
                                 id = video.id,
                                 title = it.title,
                                 shortDescription = video.shortDescription,
                                 description = it.description,
-                                backgroundImageUrl = bgUrl,
+                                backgroundImageUrl = video.backgroundImageUrl ?: it.backgroundImageUrl,
                                 cardImageUrl = video.cardImageUrl,
                                 detailsUrl = video.detailsUrl,
                                 category = video.category,
@@ -254,7 +253,8 @@ fun getRecommendations(callback: (Exception?, Playlist) -> Unit): Request {
     return getLandingPage("Recommendations") { error, playlists ->
         // The http library runs its callbacks on the UI thread, but recommendations should be
         // fetched on a background thread. So we have to fork a new thread before doing anything else
-        thread {
+        if (playlists.size < 3) callback(error, Playlist())
+        else thread {
             val result = playlists.subList(0, 2)
                     .reduce { acc, playlist ->  Playlist(acc.title, acc.data.plus(playlist.data.map(::getVideoDetailsSync))) }
             callback(error, result)
@@ -391,7 +391,7 @@ fun getVideoDetailsSync (video : Video) : Video {
 
 private fun parseCategory (doc : Element) : Category {
     return Category(
-            name = doc.select("span.tile__title").first().text(),
+            name = doc.select("h2.tile__title").first().text(),
             cardImageUrl = parseSrcSet(doc.select("div.tile__image").first().select("img").first().attr("srcset")),
             link = toAbsoluteUrl(doc.select("a.tile--category").first().attr("href"))
     )
@@ -404,12 +404,19 @@ private fun parseVideo (doc : Element, category : String = "") : Video {
         description = description ?: input.select("div.tile__subtitle").first()?.text()
         return description
     }
+
+    fun getCardImageUrl (input : Element) : String? {
+        var imageUrl = parseSrcSet(input.select("div.tile__image").first()?.select("img")?.first()?.attr("srcset"))
+        imageUrl = imageUrl ?: getBackgroundImage(input.select("div.tile__image").first()?.attr("style"))
+        return imageUrl
+    }
+
     return Video(
             id = UUID.randomUUID().mostSignificantBits,
             title = doc.select("h3.tile__title").first().text(),
             description = getDescription(doc),
             shortDescription = getDescription(doc),
-            cardImageUrl = parseSrcSet(doc.select("div.tile__image").first().select("img").first().attr("srcset")),
+            cardImageUrl = getCardImageUrl(doc),
             category = category,
             detailsUrl = toAbsoluteUrl(doc.select("a.tile")?.first()?.attr("href"))
     )
@@ -445,10 +452,10 @@ private fun searchJsonToVideo (json : JSONObject) : Video {
 }
 
 private fun contentJsonToVideo (json : JSONObject) : Video {
-    val backgroundImageUrl = if (json.getString("assetImage") == "") {
-        json.getString("programImage")
-    } else {
-        json.getString("assetImage")
+    val backgroundImageUrl = when {
+        json.optString("programImage", "") != "" -> json.getString("programImage")
+        json.optString("assetImage", "") != "" -> json.getString("assetImage")
+        else -> null
     }
     return Video(
             id = json.getLong("whatsonId"),
@@ -495,7 +502,8 @@ private fun parsePlaylist (doc : Element) : Playlist {
     )
 }
 
-private fun parseSrcSet(srcSet : String) : String {
+private fun parseSrcSet(srcSet : String?) : String? {
+    if (srcSet == null) return null
     val imageUrl = srcSet
             .split(',')
             .first { it.endsWith("2x") }
@@ -531,4 +539,24 @@ private fun toAbsoluteUrl(url : String?) : String {
             url
         }
     }
+}
+
+/**
+ * Simple function which extracts the value of `background-image` in a css style attribute
+ * Returns null if the input is null or no `background-image` property is found.
+ * It assumes that the value is wrapped in `url()` and will remove those
+ *
+ * @param css A string containing a css style attribute
+ * @returns The value of the `background-image` attribute (stripped of `url()`) or null if no such
+ *          attribute could be found
+ */
+private fun getBackgroundImage(css : String?) : String? {
+    return css?.split(";")
+            ?.asSequence()
+            ?.map { it.trim() }
+            ?.firstOrNull { it.startsWith("background-image") }
+            ?.dropWhile { it != ':' }
+            ?.trim()
+            ?.drop(5)
+            ?.dropLast(2)
 }
