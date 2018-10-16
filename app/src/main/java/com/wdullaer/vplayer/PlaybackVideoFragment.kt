@@ -14,6 +14,8 @@ import androidx.leanback.app.VideoSupportFragment
 import androidx.leanback.app.VideoSupportFragmentGlueHost
 import androidx.leanback.media.PlaybackGlue
 import android.util.Log
+import com.google.android.exoplayer2.DefaultLoadControl
+import com.google.android.exoplayer2.DefaultRenderersFactory
 import com.google.android.exoplayer2.ext.leanback.LeanbackPlayerAdapter
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
 import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection
@@ -86,10 +88,17 @@ class PlaybackVideoFragment : VideoSupportFragment() {
         // Parse the intent for the target video
         val video = nActivity.intent.getParcelableExtra(DetailsActivity.VIDEO) as Video
         // Create a simple ExoPlayer
-        val bandwidthMeter = DefaultBandwidthMeter()
-        val videoTrackSelectionFactory = AdaptiveTrackSelection.Factory(bandwidthMeter)
+        val videoTrackSelectionFactory = AdaptiveTrackSelection.Factory()
         val trackSelector = DefaultTrackSelector(videoTrackSelectionFactory)
-        mPlayer = ExoPlayerFactory.newSimpleInstance(activity, trackSelector)
+        val bandwidthMeter = DefaultBandwidthMeter()
+        mPlayer = ExoPlayerFactory.newSimpleInstance(
+                activity,
+                DefaultRenderersFactory(activity),
+                trackSelector,
+                DefaultLoadControl(),
+                null,
+                bandwidthMeter
+        )
 
         // Create a player adapter (TODO: figure out what this actually does)
         val playerAdapter = LeanbackPlayerAdapter(activity, mPlayer, updateDelay)

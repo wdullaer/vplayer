@@ -8,9 +8,7 @@
   -->
 
 <resources>
-    <string name="related_movies">Gerelateerde Videos</string>
     <string name="play_video_1">Bekijk video</string>
-    <string name="movie">Film</string>
     <string name="video_error_unknown_error">De video kon niet geladen worden</string>
     <string name="error_fragment_message">Er deed zich een fout voor</string>
     <string name="dismiss_error">Ga terug</string>

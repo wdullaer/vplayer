@@ -13,6 +13,7 @@ import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
+import android.graphics.drawable.Drawable
 import android.os.Bundle
 import androidx.leanback.app.BackgroundManager
 import androidx.leanback.app.DetailsSupportFragment
@@ -24,13 +25,13 @@ import android.widget.Toast
 
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
-import com.bumptech.glide.request.target.SimpleTarget
 import com.bumptech.glide.request.transition.Transition
 import android.view.ViewGroup
 import android.view.LayoutInflater
 import androidx.leanback.widget.Presenter
 import androidx.leanback.widget.DetailsOverviewRow
 import android.widget.ImageView
+import com.wdullaer.vplayer.glide.CustomTarget
 
 
 /**
@@ -135,6 +136,9 @@ class VideoDetailsFragment : DetailsSupportFragment() {
     }
 
     private fun updateBackground(video: Video) {
+        Log.i("VideoDetailsFragment", "Using background ${video.backgroundImageUrl}")
+        if (video.backgroundImageUrl == null) return
+
         val width = windowMetrics.widthPixels
         val height = windowMetrics.heightPixels
         val glideOptions = RequestOptions()
@@ -145,10 +149,19 @@ class VideoDetailsFragment : DetailsSupportFragment() {
                 .asBitmap()
                 .load(video.backgroundImageUrl)
                 .apply(glideOptions)
-                .into<SimpleTarget<Bitmap>>(object : SimpleTarget<Bitmap>(width, height) {
-                    override fun onResourceReady(bitmap: Bitmap,
-                                                 glideAnimation: Transition<in Bitmap>?) {
-                        backgroundManager.setBitmap(bitmap)
+                .into(object : CustomTarget<Bitmap>(width, height) {
+                    override fun onResourceReady(resource: Bitmap, transition: Transition<in Bitmap>?) {
+                        backgroundManager.setBitmap(resource)
+                    }
+
+                    override fun onLoadCleared(placeholder: Drawable?) {
+                        if (backgroundManager.isAttached) {
+                            backgroundManager.clearDrawable()
+                        }
+                    }
+
+                    override fun onLoadFailed(errorDrawable: Drawable?) {
+                        errorDrawable?.let { backgroundManager.drawable = it }
                     }
                 })
     }
@@ -163,16 +176,24 @@ class VideoDetailsFragment : DetailsSupportFragment() {
                 .fitCenter()
                 .dontAnimate()
                 .error(R.drawable.default_background)
+                .placeholder(R.drawable.default_background)
         Glide.with(this)
                 .asBitmap()
                 .load(selectedVideo.cardImageUrl)
                 .apply(glideOptions)
-                .into<SimpleTarget<Bitmap>>(object : SimpleTarget<Bitmap>(width, height) {
-                    override fun onResourceReady(resource: Bitmap,
-                                                 glideAnimation: Transition<in Bitmap>?) {
+                .into(object : CustomTarget<Bitmap>(width, height) {
+                    override fun onResourceReady(resource: Bitmap, transition: Transition<in Bitmap>?) {
                         Log.d(TAG, "details overview card image url ready: $resource")
                         row.setImageBitmap(activity, resource)
                         startEntranceTransition()
+                    }
+
+                    override fun onLoadCleared(placeholder: Drawable?) {
+                        placeholder?.let { row.imageDrawable = it }
+                    }
+
+                    override fun onLoadFailed(errorDrawable: Drawable?) {
+                        errorDrawable?.let { row.imageDrawable = it }
                     }
                 })
 

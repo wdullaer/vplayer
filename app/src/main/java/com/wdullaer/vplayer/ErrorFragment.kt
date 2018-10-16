@@ -9,6 +9,7 @@
 package com.wdullaer.vplayer
 
 import android.os.Bundle
+import android.util.Log
 import androidx.core.content.ContextCompat
 import android.view.View
 import java.io.PrintWriter
@@ -22,13 +23,15 @@ class ErrorFragment : androidx.leanback.app.ErrorSupportFragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        error = savedInstanceState?.getSerializable("error") as ParserException
+        error = this.arguments?.getSerializable("error") as ParserException
+        setErrorContent()
     }
 
     internal fun setErrorContent() {
         imageDrawable = ContextCompat.getDrawable(requireContext(), R.drawable.lb_ic_sad_cloud)
         setDefaultBackground(TRANSLUCENT)
 
+        Log.e("ErrorFragment", error.toString())
         error?.let {
             title = resources.getString(it.userMessageRes)
             val sw = StringWriter()

@@ -9,11 +9,9 @@
 <resources>
     <string name="app_name" translatable="false">vPlayer</string>
     <string name="browse_title" translatable="false">vPlayer</string>
-    <string name="related_movies">Related Videos</string>
     <string name="account_settings">Account</string>
     <string name="settings">Settings</string>
     <string name="play_video_1">Play movie</string>
-    <string name="movie">Movie</string>
     <string name="default_playlist_title">Spotlight</string>
 
     <string name="pref_username_key" translatable="false">pref_username</string>

@@ -30,8 +30,8 @@ import android.widget.Toast
 
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
-import com.bumptech.glide.request.target.SimpleTarget
 import com.bumptech.glide.request.transition.Transition
+import com.wdullaer.vplayer.glide.CustomTarget
 import com.wdullaer.vplayer.recommendation.scheduleChannelUpdate
 import com.wdullaer.vplayer.recommendation.scheduleRecommendationUpdate
 import kotlin.properties.Delegates
@@ -205,10 +205,19 @@ class MainFragment : BrowseSupportFragment() {
                 .asBitmap()
                 .load(uri)
                 .apply(glideOptions)
-                .into(object : SimpleTarget<Bitmap>(width, height) {
-                    override fun onResourceReady(bitmap: Bitmap,
-                                                 glideAnimation: Transition<in Bitmap>?) {
-                        mBackgroundManager.setBitmap(bitmap)
+                .into(object : CustomTarget<Bitmap>(width, height) {
+                    override fun onResourceReady(resource: Bitmap, transition: Transition<in Bitmap>?) {
+                        mBackgroundManager.setBitmap(resource)
+                    }
+
+                    override fun onLoadCleared(placeholder: Drawable?) {
+                        if (mBackgroundManager.isAttached) {
+                            mBackgroundManager.clearDrawable()
+                        }
+                    }
+
+                    override fun onLoadFailed(errorDrawable: Drawable?) {
+                        errorDrawable?.let { mBackgroundManager.drawable = it }
                     }
                 })
         mBackgroundTimer.cancel()

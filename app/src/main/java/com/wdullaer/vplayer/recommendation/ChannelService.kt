@@ -1,5 +1,6 @@
 package com.wdullaer.vplayer.recommendation
 
+import android.annotation.SuppressLint
 import android.app.job.JobInfo
 import android.app.job.JobParameters
 import android.app.job.JobScheduler
@@ -138,6 +139,7 @@ class ChannelProgramService : JobService() {
         return false
     }
 
+    @SuppressLint("RestrictedApi")
     private fun deleteChannelContent(context: Context, channelId: Long): Boolean {
         Log.i("ChannelProgramService", "Deleting all programs in main Channel")
         val cursor = context.contentResolver.query(
@@ -160,6 +162,7 @@ class ChannelProgramService : JobService() {
         return false
     }
 
+    @SuppressLint("RestrictedApi")
     private fun updateChannelContent(context: Context, channelId: Long): Boolean {
         Log.i("ChannelProgramService", "Updating programs in main Channel")
         val latch = CountDownLatch(1)

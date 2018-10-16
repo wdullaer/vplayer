@@ -36,10 +36,12 @@ class AuthenticationActivity : FragmentActivity() {
 }
 
 class FirstStepFragment : GuidedStepSupportFragment() {
-    private val LOGIN = 2L
-    private val USERNAME = 3L
-    private val PASSWORD = 4L
-    private val LOGOUT = 5L
+    companion object {
+        private const val LOGIN = 2L
+        private const val USERNAME = 3L
+        private const val PASSWORD = 4L
+        private const val LOGOUT = 5L
+    }
 
     /*override fun onProvideTheme(): Int {
         return R.style.theme_first_step

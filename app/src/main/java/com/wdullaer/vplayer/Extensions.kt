@@ -87,7 +87,6 @@ fun FragmentActivity.showErrorFragment(e : ParserException) {
     val errorFragment = ErrorFragment()
     errorFragment.arguments = fragmentArgs
     supportFragmentManager.beginTransaction().add(R.id.main_browse_fragment, errorFragment).commit()
-    errorFragment.setErrorContent()
 }
 
 /**
