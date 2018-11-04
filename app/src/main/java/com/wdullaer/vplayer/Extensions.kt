@@ -92,7 +92,7 @@ fun FragmentActivity.showErrorFragment(e : ParserException) {
 /**
  * Start the PlaybackActivity for the given Video
  */
-fun Activity.startPlaybackActivity(video: Video) {
+fun Activity.startPlaybackActivity(video: Playable) {
     val intent = Intent(this, PlaybackActivity::class.java)
     intent.putExtra(DetailsActivity.VIDEO, video)
     startActivity(intent)
@@ -152,6 +152,11 @@ fun <T> JSONArray.map(transform : (Any) -> T) : Sequence<T> {
     return generateSequence(0) { it + 1 }
             .take(this.length())
             .map { transform(this.get(it)) }
+}
+
+fun String.ensurePrefix(prefix: String): String {
+    if (this.startsWith(prefix)) return this
+    return "$prefix$this"
 }
 
 fun Context.convertDpToPixel(dp: Int) : Int {

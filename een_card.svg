@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="313"
+   height="176"
+   viewBox="0 0 82.814581 46.566668"
+   version="1.1"
+   id="svg8"
+   inkscape:version="0.92.2 5c3e80d, 2017-08-06"
+   sodipodi:docname="een_card.svg">
+  <defs
+     id="defs2" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="3.1704545"
+     inkscape:cx="156.5"
+     inkscape:cy="88"
+     inkscape:document-units="mm"
+     inkscape:current-layer="layer1"
+     showgrid="true"
+     units="px"
+     inkscape:window-width="1280"
+     inkscape:window-height="755"
+     inkscape:window-x="0"
+     inkscape:window-y="1"
+     inkscape:window-maximized="1">
+    <inkscape:grid
+       type="xygrid"
+       id="grid10"
+       spacingx="0.26458333"
+       spacingy="0.26458333" />
+  </sodipodi:namedview>
+  <metadata
+     id="metadata5">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Laag 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0,-250.43332)">
+    <rect
+       style="fill:#182b48;fill-opacity:1;stroke:none;stroke-width:0.26586047"
+       id="rect12"
+       width="82.814583"
+       height="46.566669"
+       x="0"
+       y="250.43332"
+       ry="0" />
+    <g
+       id="g970"
+       transform="translate(3.4097731,5.2420579)">
+      <text
+         id="text963"
+         y="273.1875"
+         x="22.489584"
+         style="font-style:normal;font-weight:normal;font-size:10.58333302px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#fffffd;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+         xml:space="preserve"><tspan
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:16.93333244px;font-family:Roboto;-inkscape-font-specification:'Roboto Bold';fill:#fffffd;fill-opacity:1;stroke-width:0.26458332"
+           y="273.1875"
+           x="22.489584"
+           id="tspan961"
+           sodipodi:role="line">EEN</tspan></text>
+      <rect
+         y="274.51041"
+         x="23.547916"
+         height="1.2898254"
+         width="28.899204"
+         id="rect965"
+         style="fill:#5dfc71;fill-opacity:1;stroke:none;stroke-width:0.26458332" />
+    </g>
+  </g>
+</svg>

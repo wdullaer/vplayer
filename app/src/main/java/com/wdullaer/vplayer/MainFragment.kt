@@ -119,8 +119,12 @@ class MainFragment : BrowseSupportFragment() {
             this.setSelectedPosition(0, true)
         }
 
-        val gridHeader = HeaderItem(999L, "Preferences")
+        val liveHeader = HeaderItem(998L, "Live TV")
+        val liveRowAdapter = ArrayObjectAdapter(cardPresenter)
+        liveRowAdapter.addAll(0, LIVE_PLAYLIST)
+        mRowsAdapter.add(ListRow(liveHeader, liveRowAdapter))
 
+        val gridHeader = HeaderItem(999L, "Preferences")
         val mGridPresenter = GridItemPresenter()
         val gridRowAdapter = ArrayObjectAdapter(mGridPresenter)
         gridRowAdapter.add(MenuCard(
@@ -145,7 +149,7 @@ class MainFragment : BrowseSupportFragment() {
                 Toast.makeText(activity, resId, Toast.LENGTH_LONG).show()
             }
             if (!categories.isEmpty()) {
-                val categoryHeader = HeaderItem(998L, "Categories")
+                val categoryHeader = HeaderItem(997L, "Categories")
                 val categoryRowAdapter = ArrayObjectAdapter(cardPresenter)
                 categoryRowAdapter.addAll(0, categories)
                 categoryRowAdapter.notifyArrayItemRangeChanged(0, categories.size)
@@ -175,6 +179,24 @@ class MainFragment : BrowseSupportFragment() {
             when (item) {
                 is Video -> {
                     activity.startDetailsActivity(item, (itemViewHolder.view as ImageCardView).mainImageView)
+                }
+                is LiveVideo -> {
+                    val cookie = getCookie(requireContext())
+                    if (cookie == "") {
+                        Toast.makeText(context, R.string.authorization_error, Toast.LENGTH_LONG).show()
+                    } else {
+                        enrichLiveVideo(item, cookie) { error, liveVideo ->
+                            error?.let {
+                                val resId = when(it) {
+                                    is ParserException -> R.string.parse_live_video_error
+                                    is NetworkException -> R.string.video_error_server_inaccessible
+                                    else -> R.string.video_error_server_inaccessible
+                                }
+                                Toast.makeText(context, resId, Toast.LENGTH_LONG).show()
+                            }
+                            liveVideo.videoUrl?.let { activity.startPlaybackActivity(liveVideo) }
+                        }
+                    }
                 }
                 is Category -> {
                     activity.startGridActivity(item)
@@ -232,14 +254,18 @@ class MainFragment : BrowseSupportFragment() {
     }
 
     private fun getAccountName(context : Context) : String {
-        val cookie = context.getSharedPreferences(VPLAYER_PREFERENCE_ROOT, Context.MODE_PRIVATE)
-                .getString(context.resources.getString(R.string.pref_cookie_key), "")
+        val cookie = getCookie(context)
         return if (cookie == "") {
             context.resources.getString(R.string.default_account_name)
         } else {
             context.getSharedPreferences(VPLAYER_PREFERENCE_ROOT, Context.MODE_PRIVATE)
                     .getString(context.resources.getString(R.string.pref_username_key), "")
         }
+    }
+
+    private fun getCookie(context : Context) : String {
+        return context.getSharedPreferences(VPLAYER_PREFERENCE_ROOT, Context.MODE_PRIVATE)
+                .getString(context.resources.getString(R.string.pref_cookie_key), "")
     }
 
     private inner class GridItemPresenter : Presenter() {

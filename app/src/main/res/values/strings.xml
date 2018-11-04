@@ -43,6 +43,8 @@
     <string name="video_error_server_inaccessible">Media server was not reachable</string>
     <string name="video_error_unknown_error">Failed to load video</string>
     <string name="parse_category_error">Failed to parse categories</string>
+    <string name="parse_live_video_error">Failed to parse live video data</string>
+    <string name="authorization_error">Login to VRT NU is not valid</string>
     <string name="error_fragment_message">An error occurred</string>
     <string name="dismiss_error">Dismiss</string>
 

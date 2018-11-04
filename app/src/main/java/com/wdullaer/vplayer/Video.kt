@@ -8,7 +8,6 @@
 
 package com.wdullaer.vplayer
 
-import android.os.Parcelable
 import kotlinx.android.parcel.Parcelize
 import java.util.*
 
@@ -18,20 +17,20 @@ import java.util.*
 @Parcelize
 data class Video(
         var id: Long = 0,
-        var title: String? = null,
+        override var title: String = "",
         var shortDescription: String? = null,
-        var description: String? = null,
+        override var description: String = "",
         var backgroundImageUrl: String? = null,
         var cardImageUrl: String? = null,
-        var videoUrl: String? = null,
+        override var videoUrl: String? = null,
+        override var drmKey: String? = null,
         var detailsUrl: String? = null,
         var brand: String? = null,
         var category: String? = null,
         var relatedVideos : List<Playlist> = listOf(),
         var duration: Long = 0L,
         var publicationId: String = UUID.randomUUID().toString()
-) : Parcelable {
-
+) : Playable {
     override fun toString(): String {
         return "Video{" +
                 "id=" + id +

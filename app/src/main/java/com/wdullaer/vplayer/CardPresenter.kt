@@ -15,6 +15,7 @@ import androidx.core.content.ContextCompat
 import android.util.Log
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.annotation.DrawableRes
 
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
@@ -57,6 +58,7 @@ class CardPresenter(val size : CardSize = CardSize.LARGE) : Presenter() {
     override fun onBindViewHolder(viewHolder: Presenter.ViewHolder, item: Any) {
         val cardView = viewHolder.view as ImageCardView
         val image : String?
+        @DrawableRes val imageRes : Int?
         val title : String
         val content : String
 
@@ -64,24 +66,39 @@ class CardPresenter(val size : CardSize = CardSize.LARGE) : Presenter() {
         when (item) {
             is Video -> {
                 image = item.cardImageUrl
-                title = item.title ?: ""
+                imageRes = null
+                title = item.title
                 content = item.shortDescription ?: ""
+            }
+            is LiveVideo -> {
+                title = item.title
+                content = item.description
+                image = null
+                imageRes = item.cardImageRes
             }
             is Category -> {
                 image = item.cardImageUrl
+                imageRes = null
                 title = item.name
                 content = ""
             }
             else -> {
                 image = null
+                imageRes = null
                 title = ""
                 content = ""
             }
         }
 
+        cardView.titleText = title
+        cardView.contentText = content
+
+        imageRes?.let {
+            cardView.mainImage = viewHolder.view.context.getDrawable(imageRes)
+            return
+        }
+
         image?.let {
-            cardView.titleText = title
-            cardView.contentText = content
             val res = viewHolder.view.resources
             if (size == CardSize.LARGE) {
                 cardView.setMainImageDimensions(

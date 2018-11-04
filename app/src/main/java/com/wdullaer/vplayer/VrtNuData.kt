@@ -12,6 +12,7 @@ import android.util.Log
 import com.github.kittinunf.fuel.android.extension.responseJson
 import com.github.kittinunf.fuel.core.Request
 import com.github.kittinunf.fuel.httpGet
+import com.github.kittinunf.fuel.httpPost
 import com.github.kittinunf.result.Result
 import org.json.JSONObject
 import org.jsoup.Jsoup
@@ -34,6 +35,14 @@ import kotlin.concurrent.thread
 const val VRT_BASE_PATH = "https://www.vrt.be"
 const val HTML_MIME = "text/html"
 const val JSON_MIME = "application/json"
+
+const val VRT_TOKEN_PATH = "https://media-services-public.vrt.be/vualto-video-aggregator-web/rest/external/v1/tokens"
+val LIVE_PLAYLIST = listOf(
+        LiveVideo(title = "Eén", cardImageRes = R.drawable.card_live_een, detailsUrl = "https://media-services-public.vrt.be/vualto-video-aggregator-web/rest/external/v1/videos/vualto_een_geo"),
+        LiveVideo(title = "Canvas", cardImageRes = R.drawable.card_live_canvas, detailsUrl = "https://media-services-public.vrt.be/vualto-video-aggregator-web/rest/external/v1/videos/vualto_canvas_geo"),
+        LiveVideo(title = "Ketnet", cardImageRes = R.drawable.card_live_ketnet, detailsUrl = "https://media-services-public.vrt.be/vualto-video-aggregator-web/rest/external/v1/videos/vualto_ketnet_geo"),
+        LiveVideo(title = "Sporza", cardImageRes = R.drawable.card_live_sporza, detailsUrl = "https://media-services-public.vrt.be/vualto-video-aggregator-web/rest/external/v1/videos/vualto_sporza_geo")
+)
 
 fun getLandingPage(defaultTitle: String, callback : (Exception?, List<Playlist>) -> Unit): Request {
     fun parseLists(doc : Element) : Playlist {
@@ -377,7 +386,7 @@ fun getVideoDetailsSync (video : Video) : Video {
                 video.id = it.id
                 video.title = it.title
                 video.shortDescription = sanitizeText(it.shortDescription ?: it.description ?: "")
-                video.description = sanitizeText(it.description ?: "")
+                video.description = sanitizeText(it.description)
                 video.backgroundImageUrl = it.backgroundImageUrl
                 video.detailsUrl = it.detailsUrl
                 video.duration = it.duration
@@ -389,6 +398,49 @@ fun getVideoDetailsSync (video : Video) : Video {
     }
 }
 
+fun enrichLiveVideo (video : LiveVideo, cookie : String, callback : (error : Exception?, result : LiveVideo) -> Unit) {
+    fun getTargetUrl(token : String) {
+        video.detailsUrl.httpGet(listOf("vrtPlayerToken" to token))
+                .header("Accept" to JSON_MIME)
+                .responseJson { _, _, result ->
+                    when (result) {
+                        is Result.Success -> {
+                            val resObj = result.get().obj()
+                            val drmKey = resObj.getString("drm")
+                            val targetUrl = resObj
+                                    .getJSONArray("targetUrls")
+                                    .map { it as JSONObject }
+                                    .filter { it.getString("type") == "mpeg_dash" }
+                                    .first().getString("url")
+                            video.videoUrl = targetUrl
+                            video.drmKey = drmKey
+                            callback(null, video)
+                        }
+                        is Result.Failure -> {
+                            Log.e("getLiveVideo", "Failed to retrieve live TV target URL")
+                            Log.e("getLiveVideo", result.error.toString())
+                            callback(NetworkException(result.error), video)
+                        }
+                    }
+                }
+    }
+
+    VRT_TOKEN_PATH.httpPost()
+            .header(mapOf("Accept" to JSON_MIME, "Cookie" to cookie, "Content-Type" to JSON_MIME))
+            .responseJson { _, _, result ->
+                when (result) {
+                    is Result.Success -> {
+                        getTargetUrl(result.get().obj().getString("vrtPlayerToken"))
+                    }
+                    is Result.Failure -> {
+                        Log.e("getLiveVideo", "Failed to retrieve live TV token")
+                        Log.e("getLiveVideo", result.error.toString())
+                        callback(NetworkException(result.error), video)
+                    }
+                }
+            }
+}
+
 private fun parseCategory (doc : Element) : Category {
     return Category(
             name = doc.select("h2.tile__title").first().text(),
@@ -398,16 +450,17 @@ private fun parseCategory (doc : Element) : Category {
 }
 
 private fun parseVideo (doc : Element, category : String = "") : Video {
-    fun getDescription (input : Element) : String? {
+    fun getDescription (input : Element) : String {
         var description = input.select("div.tile__description").first()?.children()?.first()?.text()
         description = description ?: input.select("div.tile__description").first()?.text()
         description = description ?: input.select("div.tile__subtitle").first()?.text()
-        return description
+        return description ?: ""
     }
 
     fun getCardImageUrl (input : Element) : String? {
         var imageUrl = parseSrcSet(input.select("div.tile__image").first()?.select("img")?.first()?.attr("srcset"))
         imageUrl = imageUrl ?: getBackgroundImage(input.select("div.tile__image").first()?.attr("style"))
+        imageUrl = imageUrl ?: input.select("div.tile__image").first()?.attr("data-responsive-image")?.ensurePrefix("https:")
         return imageUrl
     }
 
@@ -551,11 +604,12 @@ private fun toAbsoluteUrl(url : String?) : String {
  *          attribute could be found
  */
 private fun getBackgroundImage(css : String?) : String? {
+    Log.i("getBackgroundImage", css)
     return css?.split(";")
             ?.asSequence()
             ?.map { it.trim() }
             ?.firstOrNull { it.startsWith("background-image") }
-            ?.dropWhile { it != ':' }
+            ?.removePrefix("background-image:")
             ?.trim()
             ?.drop(5)
             ?.dropLast(2)

@@ -35,4 +35,6 @@
     <string name="default_account_name">Anoniem</string>
     <string name="search_hint">Gewoon typen</string>
     <string name="search_description">Zoek doorheen het huidige aanbod op VRT NU</string>
+    <string name="parse_live_video_error">Het uitlezen van de live stream is mislukt</string>
+    <string name="authorization_error">Er is geen geldige VRT NU account geconfigureerd</string>
 </resources>

@@ -12,5 +12,4 @@ You will need to install it by sideloading it onto your device. A play store ver
 ## TODO
 * Return errors from VrtData functions and render them properly
 * Add unit tests to VrtData functions
-* Add livestreams
 * Implement multiple authentication methods (requires using the gigya library, not happening in the short term)
