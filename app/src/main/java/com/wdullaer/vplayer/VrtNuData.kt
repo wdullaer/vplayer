@@ -279,7 +279,7 @@ fun enrichVideo(video : Video, cookie : String, callback: (Exception?) -> Unit) 
         video.description = result.description
         video.backgroundImageUrl = result.backgroundImageUrl
         video.cardImageUrl = result.cardImageUrl
-        video.detailsUrl = result.cardImageUrl
+        video.detailsUrl = result.detailsUrl
         video.category = result.category
         video.videoUrl = result.videoUrl
         video.relatedVideos = result.relatedVideos
