@@ -17,6 +17,7 @@ import com.github.kittinunf.result.Result
 import org.json.JSONObject
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
+import java.lang.IllegalStateException
 import java.util.UUID
 import kotlin.concurrent.thread
 
@@ -33,21 +34,22 @@ import kotlin.concurrent.thread
  */
 
 const val VRT_BASE_PATH = "https://www.vrt.be"
+const val VRT_API_PATH = "https://vrtnu-api.vrt.be"
 const val HTML_MIME = "text/html"
 const val JSON_MIME = "application/json"
 
 const val VRT_TOKEN_PATH = "https://media-services-public.vrt.be/vualto-video-aggregator-web/rest/external/v1/tokens"
 val LIVE_PLAYLIST = listOf(
-        LiveVideo(title = "Eén", cardImageRes = R.drawable.card_live_een, detailsUrl = "https://media-services-public.vrt.be/vualto-video-aggregator-web/rest/external/v1/videos/vualto_een_geo"),
-        LiveVideo(title = "Canvas", cardImageRes = R.drawable.card_live_canvas, detailsUrl = "https://media-services-public.vrt.be/vualto-video-aggregator-web/rest/external/v1/videos/vualto_canvas_geo"),
-        LiveVideo(title = "Ketnet", cardImageRes = R.drawable.card_live_ketnet, detailsUrl = "https://media-services-public.vrt.be/vualto-video-aggregator-web/rest/external/v1/videos/vualto_ketnet_geo"),
-        LiveVideo(title = "Sporza", cardImageRes = R.drawable.card_live_sporza, detailsUrl = "https://media-services-public.vrt.be/vualto-video-aggregator-web/rest/external/v1/videos/vualto_sporza_geo")
+        LiveVideo(title = "Eén", cardImageRes = R.drawable.card_live_een, vualtoUrl = "https://media-services-public.vrt.be/vualto-video-aggregator-web/rest/external/v1/videos/vualto_een_geo"),
+        LiveVideo(title = "Canvas", cardImageRes = R.drawable.card_live_canvas, vualtoUrl = "https://media-services-public.vrt.be/vualto-video-aggregator-web/rest/external/v1/videos/vualto_canvas_geo"),
+        LiveVideo(title = "Ketnet", cardImageRes = R.drawable.card_live_ketnet, vualtoUrl = "https://media-services-public.vrt.be/vualto-video-aggregator-web/rest/external/v1/videos/vualto_ketnet_geo"),
+        LiveVideo(title = "Sporza", cardImageRes = R.drawable.card_live_sporza, vualtoUrl = "https://media-services-public.vrt.be/vualto-video-aggregator-web/rest/external/v1/videos/vualto_sporza_geo")
 )
 
 fun getLandingPage(defaultTitle: String, callback : (Exception?, List<Playlist>) -> Unit): Request {
     fun parseLists(doc : Element) : Playlist {
-        val title = doc.select("h2.vrtlist__title").first()?.text()?.trim()?.capitalize()
-        val data = doc.select("li.vrtlist__item").map { parseVideo(it) }
+        val title = doc.select("h2").first()?.text()?.trim()?.capitalize()
+        val data = doc.select("li").map { parseVideo(it) }
         return Playlist(title ?: defaultTitle, data)
     }
 
@@ -57,7 +59,10 @@ fun getLandingPage(defaultTitle: String, callback : (Exception?, List<Playlist>)
         when (result) {
             is Result.Success -> {
                 try {
-                    Jsoup.parse(result.get()).select(".list").map(::parseLists)
+                    Jsoup
+                            .parse(result.get()).select(".list")
+                            .map(::parseLists)
+                            .filter { it.data.isNotEmpty() }
                 } catch (e : Exception) {
                     Log.e("getLandingpage", "Failed to parse landingpage HTML")
                     Log.e("getLandingpage", e.toString())
@@ -129,128 +134,119 @@ fun getMoviesByCategory(category : Category, callback : (Exception?, List<Video>
     }
 }
 
-fun getVideoDetails(video : Video, cookie : String = "", callback : (Exception?, Video) -> Unit) {
-    fun fetchVideoUrls(clientid : String, videoid : String) {
-        val endpoint = "https://mediazone.vrt.be/api/v1/$clientid/assets/$videoid"
-        endpoint.httpGet().header("Accept" to JSON_MIME, "Cookie" to cookie).responseJson {_, _, result ->
-            when (result) {
-                is Result.Success -> {
-                    try {
-                        streamJsonToVideo(result.get().obj())
-                    } catch (e : Exception) {
-                        Log.e("getVideoDetails", "Failed to parse json containing stream urls")
-                        Log.e("getVideoDetails", e.toString())
-                        callback(ParserException(e, STREAM_JSON_TO_VIDEO_ERROR), video)
-                        null
-                    }?.let {
-                        callback(null, Video(
-                                id = video.id,
-                                title = it.title,
-                                shortDescription = video.shortDescription,
-                                description = it.description,
-                                backgroundImageUrl = video.backgroundImageUrl ?: it.backgroundImageUrl,
-                                cardImageUrl = video.cardImageUrl,
-                                detailsUrl = video.detailsUrl,
-                                category = video.category,
-                                relatedVideos = video.relatedVideos,
-                                videoUrl = it.videoUrl,
-                                duration = video.duration,
-                                publicationId = video.publicationId
-                        ))
-                    }
-                }
-                is Result.Failure -> {
-                    Log.e("getVideoDetails", "Failed to retrieve data from $endpoint")
-                    Log.e("getVideoDetails", result.error.toString())
-                    callback(NetworkException(result.error), video)
-                }
-            }
+fun getVideoDetails(video: Video, cookie: String, callback: (Exception?, Video) -> Unit) {
+    val detailsUrl = video.detailsUrl ?: return callback(IllegalStateException("Video should have a detailsUrl"), video)
 
-        }
-    }
-
-    fun fetchVideoIds(detailsUrl : String) {
-        getVideosLink(detailsUrl).httpGet().header("Accept" to JSON_MIME, "Cookie" to cookie).responseJson { _, _, result ->
-            when (result) {
-                is Result.Success -> {
-                    val json = result.get().obj()
-                    // TODO: validate payload before parsing
-                    val key = json.keys().next()
-                    val clientid = json.getJSONObject(key).optString("clientid")
-                    val videoid = json.getJSONObject(key).optString("videoid")
-                    if (clientid == "" || videoid == "") {
-                        Log.e("getVideoDetails", "Failed to parse clientid and videoid")
-                        Log.e("getVideoDetails", json.toString())
-                        callback(ParserException(ID_JSON_ERROR), video)
-                    } else {
-                        fetchVideoUrls(clientid, videoid)
-                    }
-                }
-                is Result.Failure -> {
-                    Log.e("getVideoDetails", "Failed to retrieve data from ${getVideosLink(detailsUrl)}")
-                    Log.e("getVideoDetails", result.error.toString())
-                    // TODO distinguish between a network error and a authorization error
-                    callback(NetworkException(result.error), video)
-                }
-            }
-        }
-    }
-
-    fun fetchRelatedVideos(detailsUrl : String) {
-        detailsUrl.httpGet().header("Accept" to HTML_MIME).responseString {_, _, result ->
-            // If VRT provides an episode list, show these as related
-//          val episodes = html.select("div.episodeslist")
-//          if (!episodes.isEmpty()) relatedVideos.addAll(episodes.map(::parsePlaylist))
-//
-//          // If VRT provides a list of related videos add that as well
-//          val related = html.select("div.list-inherited")
-//          if (!related.isEmpty()) relatedVideos.add(parsePlaylist(related.first()))
-            // TODO use https://search.vrt.be/suggest and https://search.vrt.be/search to
-            // populate the related videos and other seasons playlists rather than parsing the
-            // website
-            video.relatedVideos = try {
-                Jsoup.parse(result.get())
-                        .select(".main-content")
-                        .select("div.vrtlist")
-                        .map(::parsePlaylist)
-            } catch (e : Exception) {
-                Log.e("getVideoDetails", "Failed to parse related video playlists")
-                Log.e("getVideoDetails", e.toString())
-                listOf()
-            }
-            fetchVideoIds(detailsUrl)
-        }
-    }
-
-    // TODO: pass the error on so we can render a nice message to the user
-    val detailsUrl = video.detailsUrl ?: return callback(Exception("Missing detailsUrl: cannot fetch additional details and playbackUrl"), video)
-    Log.i("getVideoDetails", "Fetching data from $detailsUrl")
-    getContentsLink(detailsUrl).httpGet().header("Accept" to JSON_MIME).responseJson {_, _, result ->
+    getContentsLink(detailsUrl).httpGet().responseJson { _, _, result ->
         when (result) {
+            is Result.Failure -> {
+                Log.e("getVideoDetails", "Failed to retrieve data from $detailsUrl")
+                Log.e("getVideoDetails", result.error.toString())
+                callback(NetworkException(result.error), video)
+            }
             is Result.Success -> {
                 try {
                     contentJsonToVideo(result.get().obj())
-                } catch (e : Exception) {
+                } catch (e: Exception) {
                     Log.e("getVideoDetails", "Failed to parse content json")
                     Log.e("getVideoDetails", e.toString())
                     callback(ParserException(e, CONTENT_JSON_TO_VIDEO_ERROR), video)
                     null
                 }?.let {
-                    video.id = it.id
-                    video.title = it.title
-                    video.shortDescription = it.shortDescription
-                    video.description = it.description
-                    video.backgroundImageUrl = it.backgroundImageUrl
-                    video.detailsUrl = it.detailsUrl
-                    video.duration = it.duration
-                    video.publicationId = it.publicationId
-                    video.detailsUrl?.let {url -> fetchRelatedVideos(url) }
+                    getRelatedVideos(it) { error, playlist ->
+                        it.relatedVideos = playlist
+                        getVideoUrl(it, cookie) { error2, videoUrl, drmKey ->
+                            it.videoUrl = videoUrl
+                            it.drmKey = drmKey
+                            callback(error2 ?: error, it)
+                        }
+                    }
                 }
             }
+        }
+    }
+}
+
+fun getRelatedVideos(video: Video, callback: (Exception?, List<Playlist>) -> Unit) {
+    val programName = video.programName ?: return callback(IllegalStateException("Cannot fetch related videos when programName is null"), listOf())
+    "$VRT_API_PATH/search?q=$programName".httpGet().responseJson { _, _, result ->
+        when (result) {
             is Result.Failure -> {
-                Log.e("getVideoDetails", "Failed to retrieve data from $detailsUrl")
-                Log.e("getVideoDetails", result.error.toString())
-                callback(NetworkException(result.error), video)
+                Log.e("getRelatedVideos", "Failed to retrieve data from $VRT_API_PATH")
+                Log.e("getRelatedVideos", result.error.toString())
+                callback(NetworkException(result.error), listOf())
+            }
+            is Result.Success -> {
+                try {
+                    result.get().obj()
+                            .getJSONArray("results")
+                            .map { contentJsonToVideo(it as JSONObject) }
+                            .filterNot { it.publicationId == video.publicationId }
+                            .toList()
+                } catch (e: Exception) {
+                    Log.e("getRelatedVideos", "Failed to parse json from $VRT_API_PATH")
+                    Log.e("getRelatedVideos", e.toString())
+                    callback(ParserException(e, CONTENT_JSON_TO_VIDEO_ERROR), listOf())
+                    null
+                }?.let {
+                    callback(null, listOf(Playlist(data = it)))
+                }
+            }
+        }
+    }
+}
+
+fun getVrtToken(cookie: String, callback: (Exception?, String) -> Unit) {
+    VRT_TOKEN_PATH.httpPost()
+            .header(mapOf("Accept" to JSON_MIME, "Cookie" to cookie, "Content-Type" to JSON_MIME))
+            .responseJson { _, _, result ->
+                when (result) {
+                    is Result.Success -> {
+                        try {
+                            result.get().obj().getString("vrtPlayerToken")
+                        } catch (e: Exception) {
+                            callback(ParserException(e, VRT_TOKEN_ERROR), "")
+                            null
+                        }?.let { callback(null, it) }
+                    }
+                    is Result.Failure -> {
+                        Log.e("getVrtToken", "Failed to retrieve vrtToken")
+                        Log.e("getVrtToken", result.error.toString())
+                        callback(NetworkException(result.error), "")
+                    }
+                }
+            }
+}
+
+fun getVideoUrl(video: Playable, cookie: String, callback: (Exception?, String?, String?) -> Unit) {
+    getVrtToken(cookie) { error, token ->
+        if (error != null) {
+            callback(error, null, null)
+        }
+        else {
+            video.vualtoUrl.httpGet(listOf("vrtPlayerToken" to token)).responseJson { _, _, result ->
+                when (result) {
+                    is Result.Success -> {
+                        val resObj = result.get().obj()
+                        try {
+                            // TODO: make this a function we can test
+                            val drmKey = if (resObj.isNull("drm")) null else resObj.getString("drm")
+                            val targetUrl = resObj
+                                    .getJSONArray("targetUrls")
+                                    .map { it as JSONObject }
+                                    .filter { it.getString("type") == "mpeg_dash" }
+                                    .first().getString("url")
+                            callback(null, targetUrl, drmKey)
+                        } catch (e: Exception) {
+                            callback(ParserException(e, STREAM_JSON_TO_VIDEO_ERROR), null, null)
+                        }
+                    }
+                    is Result.Failure -> {
+                        Log.e("getVideoUrl", "Failed to retrieve video target URL")
+                        Log.e("getVideoUrl", result.error.toString())
+                        callback(NetworkException(result.error), null, null)
+                    }
+                }
             }
         }
     }
@@ -273,19 +269,7 @@ fun getRecommendations(callback: (Exception?, Playlist) -> Unit): Request {
 
 fun enrichVideo(video : Video, cookie : String, callback: (Exception?) -> Unit) {
     getVideoDetails(video, cookie) { error, result ->
-        video.id = result.id
-        video.title = result.title
-        video.shortDescription = result.shortDescription
-        video.description = result.description
-        video.backgroundImageUrl = result.backgroundImageUrl
-        video.cardImageUrl = result.cardImageUrl
-        video.detailsUrl = result.detailsUrl
-        video.category = result.category
-        video.videoUrl = result.videoUrl
-        video.relatedVideos = result.relatedVideos
-        video.duration = result.duration
-        video.publicationId = result.publicationId
-
+        result.copyInto(video)
         callback(error)
     }
 }
@@ -294,7 +278,7 @@ fun searchVideo (query : String, callback : (Exception?, Playlist) -> Unit) {
     if (query == "") {
         callback(null, Playlist())
     }
-    val endpoint = "https://search.vrt.be/suggest?i=video&q=$query"
+    val endpoint = "$VRT_API_PATH/suggest?i=video&q=$query"
     endpoint.httpGet().header("Accept" to JSON_MIME).responseJson { _, _, result ->
         when (result) {
             is Result.Success -> {
@@ -324,7 +308,7 @@ fun searchVideo (query : String, callback : (Exception?, Playlist) -> Unit) {
 // Given that these are UUIDs it should be relatively safe to assume that this will always be the case
 fun getVideoByPubId (id : String, callback : (Exception?, Video) -> Unit) {
     if (id == "") callback(null, Video())
-    val query = "https://search.vrt.be/search?q=$id"
+    val query = "$VRT_API_PATH/search?q=$id"
     query.httpGet().header("Accept" to JSON_MIME).responseJson {_, _, result ->
         when (result) {
             is Result.Success -> {
@@ -335,7 +319,7 @@ fun getVideoByPubId (id : String, callback : (Exception?, Video) -> Unit) {
                     Log.w("getvideoByPubId", "Could not find video with id=$id")
                     callback(ParserException("Could not find video with id=$id", 1001), Video())
                 } else {
-                    callback(null, searchJsonToVideo(matches.getJSONObject(0)))
+                    callback(null, contentJsonToVideo(matches.getJSONObject(0)))
                 }
             }
             is Result.Failure -> {
@@ -350,7 +334,7 @@ fun getVideoByPubId (id : String, callback : (Exception?, Video) -> Unit) {
 fun searchVideoSync (query : String) : Playlist {
     if (query == "") return Playlist()
 
-    val endpoint = "https://search.vrt.be/suggest?i=video&q=$query"
+    val endpoint = "$VRT_API_PATH/suggest?i=video&q=$query"
     val result = endpoint.httpGet().header("Accept" to JSON_MIME).responseJson().third
 
     return when (result) {
@@ -378,20 +362,11 @@ fun getVideoDetailsSync (video : Video) : Video {
     return when (content) {
         is Result.Success -> {
             try {
-                contentJsonToVideo(content.get().obj())
-            } catch (e : Exception) {
-                Log.e("getVideoDetailsSync", e.toString())
-                null
-            }?.let {
-                video.id = it.id
-                video.title = it.title
-                video.shortDescription = sanitizeText(it.shortDescription ?: it.description ?: "")
-                video.description = sanitizeText(it.description)
-                video.backgroundImageUrl = it.backgroundImageUrl
-                video.detailsUrl = it.detailsUrl
-                video.duration = it.duration
-                video.publicationId = it.publicationId
-            }
+                    contentJsonToVideo(content.get().obj())
+                } catch (e : Exception) {
+                    Log.e("getVideoDetailsSync", e.toString())
+                    null
+                }?.copyInto(video)
             video
         }
         is Result.Failure -> video
@@ -399,46 +374,15 @@ fun getVideoDetailsSync (video : Video) : Video {
 }
 
 fun enrichLiveVideo (video : LiveVideo, cookie : String, callback : (error : Exception?, result : LiveVideo) -> Unit) {
-    fun getTargetUrl(token : String) {
-        video.detailsUrl.httpGet(listOf("vrtPlayerToken" to token))
-                .header("Accept" to JSON_MIME)
-                .responseJson { _, _, result ->
-                    when (result) {
-                        is Result.Success -> {
-                            val resObj = result.get().obj()
-                            val drmKey = resObj.getString("drm")
-                            val targetUrl = resObj
-                                    .getJSONArray("targetUrls")
-                                    .map { it as JSONObject }
-                                    .filter { it.getString("type") == "mpeg_dash" }
-                                    .first().getString("url")
-                            video.videoUrl = targetUrl
-                            video.drmKey = drmKey
-                            callback(null, video)
-                        }
-                        is Result.Failure -> {
-                            Log.e("getLiveVideo", "Failed to retrieve live TV target URL")
-                            Log.e("getLiveVideo", result.error.toString())
-                            callback(NetworkException(result.error), video)
-                        }
-                    }
-                }
+    getVideoUrl(video, cookie) { error, targetUrl, drmKey ->
+        if (error != null) {
+            callback(error, video)
+        } else {
+            video.videoUrl = targetUrl
+            video.drmKey = drmKey
+            callback(null, video)
+        }
     }
-
-    VRT_TOKEN_PATH.httpPost()
-            .header(mapOf("Accept" to JSON_MIME, "Cookie" to cookie, "Content-Type" to JSON_MIME))
-            .responseJson { _, _, result ->
-                when (result) {
-                    is Result.Success -> {
-                        getTargetUrl(result.get().obj().getString("vrtPlayerToken"))
-                    }
-                    is Result.Failure -> {
-                        Log.e("getLiveVideo", "Failed to retrieve live TV token")
-                        Log.e("getLiveVideo", result.error.toString())
-                        callback(NetworkException(result.error), video)
-                    }
-                }
-            }
 }
 
 private fun parseCategory (doc : Element) : Category {
@@ -483,75 +427,42 @@ private fun suggestJsonToVideo (json : JSONObject, category: String = "") : Vide
             shortDescription = sanitizeText(json.getString("description")),
             detailsUrl = toAbsoluteUrl(json.getString("targetUrl")),
             cardImageUrl = toAbsoluteUrl(json.getString("thumbnail")),
-            brand = json.getJSONArray("brands").optString(0),
             category = category
     )
 }
 
-private fun searchJsonToVideo (json : JSONObject) : Video {
-    return Video(
-            id = json.getLong("whatsonId"),
-            title = json.getString("title"),
-            description = json.getString("description"),
-            shortDescription = json.getString("shortDescription"),
-            detailsUrl = toAbsoluteUrl(json.getString("url")),
-            cardImageUrl = toAbsoluteUrl(json.getString("videoThumbnailUrl")),
-            brand = json.getJSONArray("brands").optString(0),
-            category = json.getJSONArray("categories").optString(0),
-            backgroundImageUrl = toAbsoluteUrl(json.getString("programImageUrl")),
-            publicationId = json.getString("publicationId"),
-            duration = json.getLong("duration") * 60 * 1000 // Durations are given in minutes for this API
-    )
-}
-
+/**
+ * Function to parse the results of the video content.json and the results of the search API
+ * The json payloads are not exactly the same, but similar enough that we can roll it in one function
+ */
 private fun contentJsonToVideo (json : JSONObject) : Video {
     val backgroundImageUrl = when {
-        json.optString("programImage", "") != "" -> json.getString("programImage")
-        json.optString("assetImage", "") != "" -> json.getString("assetImage")
+        json.optString("programImageUrl", "") != "" -> json.getString("programImageUrl")
         else -> null
+    }
+    val cardImageUrl = when {
+        json.optString("assetImage", "") != "" -> json.getString("assetImage")
+        json.optString("videoThumbnailUrl", "") != "" -> json.getString("videoThumbnailUrl")
+        else -> null
+    }
+    val duration = if (json.getLong("duration") < 3600) {
+        json.getLong("duration") * 60 * 1000 // Durations are given in minutes in the search API
+    } else {
+        json.getLong("duration") // Durations are given in ms in the content.json
     }
     return Video(
             id = json.getLong("whatsonId"),
             title = json.getString("title"),
+            programName = json.getString("programName"),
+            description = sanitizeText(json.getString("description")),
             shortDescription =  json.getString("shortDescription"),
-            description = json.getString("description"),
-            backgroundImageUrl = backgroundImageUrl,
-            duration = json.getLong("duration"),
             detailsUrl = toAbsoluteUrl(json.getString("url")),
-            publicationId = json.getString("publicationId")
-    )
-}
-
-private fun streamJsonToVideo (json : JSONObject) : Video {
-    val posterImage = toAbsoluteUrl(json.optString("posterImageUrl"))
-    return Video(
-            title = json.getString("title"),
-            description = json.getString("description"),
-            backgroundImageUrl = posterImage,
-            duration =  json.getLong("duration"),
-            videoUrl = json.getJSONArray("targetUrls")
-                    .filter {(it as JSONObject).getString("type") == "MPEG_DASH"}
-                    .map { it as JSONObject }
-                    .first()
-                    .getString("url")
-    )
-}
-
-private fun parsePlaylist (doc : Element) : Playlist {
-    fun getTitle (input : Element) : String {
-        // See if there is an actual title provided
-        return input.select("h2.vrtlist__title").first()?.text()?.trim()
-        // If there is an episode list with one season
-        ?: input.select("div.tabs__tab--active span").first()?.text()?.trim()
-        // If there is an episode list with multiple seasons
-        ?: input.select("div.tabs__tab--active select.dropdown__element option")
-                .firstOrNull { it.hasAttr("selected") }?.text()?.trim()
-        // Return default value
-        ?: "Playlist"
-    }
-    return Playlist(
-            title = getTitle(doc).capitalize(),
-            data = doc.select("li.vrtlist__item").map { parseVideo(it) }
+            cardImageUrl = toAbsoluteUrl(cardImageUrl),
+            category = json.optJSONArray("categories")?.optString(0),
+            backgroundImageUrl = toAbsoluteUrl(backgroundImageUrl),
+            duration = duration,
+            publicationId = json.getString("publicationId"),
+            videoId = json.getString("videoId")
     )
 }
 
@@ -563,10 +474,6 @@ private fun parseSrcSet(srcSet : String?) : String? {
             .dropLast(2)
             .trim()
     return toAbsoluteUrl(imageUrl)
-}
-
-private fun getVideosLink(link : String) : String {
-    return (if (link.last() == '/') link.dropLast(1) else link).plus(".mssecurevideo.json")
 }
 
 private fun getContentsLink(link : String) : String {

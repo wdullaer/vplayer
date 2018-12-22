@@ -73,7 +73,7 @@ class VideoDetailsFragment : DetailsSupportFragment() {
         // We were started by the global search
         if (Intent.ACTION_VIEW.equals(activity.intent.action, true)) {
             getVideoByPubId(activity.intent.data.lastPathSegment) { err, video ->
-                err?.let { _ ->
+                err?.let {
                     // TODO: distinguish between network and parsing error
                     Toast.makeText(activity, R.string.video_error_server_inaccessible, Toast.LENGTH_LONG).show()
                 }
@@ -109,7 +109,7 @@ class VideoDetailsFragment : DetailsSupportFragment() {
         // This is explicitly side effecty to avoid flickering (but we should test if we can get
         // away with replacing the video)
         enrichVideo(selectedVideo, cookie) {
-            it?.let { _ ->
+            it?.let {
                 // TODO: distinguish between network, authorization and parsing error
                 Toast.makeText(activity, R.string.video_error_server_inaccessible, Toast.LENGTH_LONG).show()
             }

@@ -18,7 +18,6 @@ class DetailsDescriptionPresenter : AbstractDetailsDescriptionPresenter() {
         val movie = item as Video
 
         viewHolder.title.text = movie.title
-        viewHolder.subtitle.text = movie.brand
         viewHolder.body.text = movie.description
     }
 }

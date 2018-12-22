@@ -18,6 +18,7 @@ import java.util.*
 data class Video(
         var id: Long = 0,
         override var title: String = "",
+        var programName: String? = null,
         var shortDescription: String? = null,
         override var description: String = "",
         var backgroundImageUrl: String? = null,
@@ -25,12 +26,15 @@ data class Video(
         override var videoUrl: String? = null,
         override var drmKey: String? = null,
         var detailsUrl: String? = null,
-        var brand: String? = null,
         var category: String? = null,
         var relatedVideos : List<Playlist> = listOf(),
         var duration: Long = 0L,
-        var publicationId: String = UUID.randomUUID().toString()
+        var publicationId: String = UUID.randomUUID().toString(),
+        var videoId: String = UUID.randomUUID().toString()
 ) : Playable {
+    override val vualtoUrl: String
+        get() = "https://media-services-public.vrt.be/vualto-video-aggregator-web/rest/external/v1/videos/$publicationId%24$videoId"
+
     override fun toString(): String {
         return "Video{" +
                 "id=" + id +
@@ -40,5 +44,23 @@ data class Video(
                 ", backgroundImageUrl='" + backgroundImageUrl + '\'' +
                 ", cardImageUrl='" + cardImageUrl + '\'' +
                 '}'
+    }
+
+    fun copyInto(target: Video) {
+        target.id = this.id
+        target.title = this.title
+        target.programName = this.programName
+        target.shortDescription = this.shortDescription
+        target.description = this.description
+        target.backgroundImageUrl = this.backgroundImageUrl
+        target.cardImageUrl = this.cardImageUrl
+        target.videoUrl = this.videoUrl
+        target.drmKey = this.drmKey
+        target.detailsUrl = this.detailsUrl
+        target.category = this.category
+        target.relatedVideos = this.relatedVideos
+        target.duration = this.duration
+        target.publicationId = this.publicationId
+        target.videoId = this.videoId
     }
 }
