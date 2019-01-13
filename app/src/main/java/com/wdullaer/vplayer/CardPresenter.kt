@@ -67,7 +67,7 @@ class CardPresenter(val size : CardSize = CardSize.LARGE) : Presenter() {
             is Video -> {
                 image = item.cardImageUrl
                 imageRes = null
-                title = item.title
+                title = item.programTitle ?: item.title
                 content = item.shortDescription ?: ""
             }
             is LiveVideo -> {

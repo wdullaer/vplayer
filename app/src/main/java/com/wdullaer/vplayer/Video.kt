@@ -18,7 +18,7 @@ import java.util.*
 data class Video(
         var id: Long = 0,
         override var title: String = "",
-        var programName: String? = null,
+        var programTitle: String? = null,
         var shortDescription: String? = null,
         override var description: String = "",
         var backgroundImageUrl: String? = null,
@@ -49,7 +49,7 @@ data class Video(
     fun copyInto(target: Video) {
         target.id = this.id
         target.title = this.title
-        target.programName = this.programName
+        target.programTitle = this.programTitle
         target.shortDescription = this.shortDescription
         target.description = this.description
         target.backgroundImageUrl = this.backgroundImageUrl

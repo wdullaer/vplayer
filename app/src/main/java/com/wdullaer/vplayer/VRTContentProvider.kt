@@ -67,8 +67,8 @@ class VRTContentProvider : ContentProvider() {
                     cursor.newRow()
                             .add(BaseColumns._ID, it.id)
                             .add(SearchManager.SUGGEST_COLUMN_INTENT_DATA_ID, it.publicationId)
-                            .add(SearchManager.SUGGEST_COLUMN_TEXT_1, it.title)
-                            .add(SearchManager.SUGGEST_COLUMN_TEXT_2, it.description)
+                            .add(SearchManager.SUGGEST_COLUMN_TEXT_1, it.programTitle)
+                            .add(SearchManager.SUGGEST_COLUMN_TEXT_2, it.shortDescription)
                             .add(SearchManager.SUGGEST_COLUMN_RESULT_CARD_IMAGE, it.cardImageUrl)
                             .add(SearchManager.SUGGEST_COLUMN_CONTENT_TYPE, "application/dash+xml")
                             // VRT does not provide the production year in its APIs, but it is mandatory for google

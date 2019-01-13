@@ -168,7 +168,7 @@ fun getVideoDetails(video: Video, cookie: String, callback: (Exception?, Video) 
 }
 
 fun getRelatedVideos(video: Video, callback: (Exception?, List<Playlist>) -> Unit) {
-    val programName = video.programName ?: return callback(IllegalStateException("Cannot fetch related videos when programName is null"), listOf())
+    val programName = video.programTitle ?: return callback(IllegalStateException("Cannot fetch related videos when programTitle is null"), listOf())
     "$VRT_API_PATH/search?q=$programName".httpGet().responseJson { _, _, result ->
         when (result) {
             is Result.Failure -> {
@@ -453,7 +453,7 @@ private fun contentJsonToVideo (json : JSONObject) : Video {
     return Video(
             id = json.getLong("whatsonId"),
             title = json.getString("title"),
-            programName = json.getString("programName"),
+            programTitle = json.optString("program", null) ?: json.getString("programTitle"),
             description = sanitizeText(json.getString("description")),
             shortDescription =  json.getString("shortDescription"),
             detailsUrl = toAbsoluteUrl(json.getString("url")),
@@ -481,10 +481,10 @@ private fun getContentsLink(link : String) : String {
 }
 
 private fun sanitizeText(text : String) : String {
-    return Jsoup.parseBodyFragment(text)
+    val body = Jsoup.parseBodyFragment(text)
             .body()
-            .select("p")
-            .joinToString("\n") { it.text() }
+    return if (body.select("p").isEmpty()) body.text()
+    else body.select("p").joinToString("\n") { it.text() }
 }
 
 private fun toAbsoluteUrl(url : String?) : String {
