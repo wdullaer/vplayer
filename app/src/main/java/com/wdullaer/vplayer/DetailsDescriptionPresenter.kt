@@ -13,7 +13,7 @@ import androidx.leanback.widget.AbstractDetailsDescriptionPresenter
 class DetailsDescriptionPresenter : AbstractDetailsDescriptionPresenter() {
 
     override fun onBindDescription(
-            viewHolder: AbstractDetailsDescriptionPresenter.ViewHolder,
+            viewHolder: ViewHolder,
             item: Any) {
         val movie = item as Video
 

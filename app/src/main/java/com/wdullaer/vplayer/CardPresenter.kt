@@ -25,14 +25,14 @@ import kotlin.properties.Delegates
  * A CardPresenter is used to generate Views and bind Objects to them on demand.
  * It contains an ImageCardView.
  */
-class CardPresenter(val size : CardSize = CardSize.LARGE) : Presenter() {
+class CardPresenter(private val size : CardSize = CardSize.LARGE) : Presenter() {
     private var mDefaultCardImage: Drawable? = null
     private var sSelectedBackgroundColor: Int by Delegates.notNull()
     private var sDefaultBackgroundColor: Int by Delegates.notNull()
     private var sDefaultTextColor: Int by Delegates.notNull()
     private var sSelectedTextColor: Int by Delegates.notNull()
 
-    override fun onCreateViewHolder(parent: ViewGroup): Presenter.ViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup): ViewHolder {
         Log.d(TAG, "onCreateViewHolder")
 
         sDefaultBackgroundColor = ContextCompat.getColor(parent.context, R.color.default_background)
@@ -52,10 +52,10 @@ class CardPresenter(val size : CardSize = CardSize.LARGE) : Presenter() {
         cardView.isFocusable = true
         cardView.isFocusableInTouchMode = true
         updateCardBackgroundColor(cardView, false)
-        return Presenter.ViewHolder(cardView)
+        return ViewHolder(cardView)
     }
 
-    override fun onBindViewHolder(viewHolder: Presenter.ViewHolder, item: Any) {
+    override fun onBindViewHolder(viewHolder: ViewHolder, item: Any) {
         val cardView = viewHolder.view as ImageCardView
         val image : String?
         @DrawableRes val imageRes : Int?
@@ -121,7 +121,7 @@ class CardPresenter(val size : CardSize = CardSize.LARGE) : Presenter() {
         }
     }
 
-    override fun onUnbindViewHolder(viewHolder: Presenter.ViewHolder) {
+    override fun onUnbindViewHolder(viewHolder: ViewHolder) {
         Log.d(TAG, "onUnbindViewHolder")
         val cardView = viewHolder.view as ImageCardView
         // Remove references to images so that the garbage collector can free up memory

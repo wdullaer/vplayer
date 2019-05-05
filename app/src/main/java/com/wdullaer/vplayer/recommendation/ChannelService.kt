@@ -17,7 +17,7 @@ import androidx.tvprovider.media.tv.ChannelLogoUtils
 import androidx.tvprovider.media.tv.PreviewProgram
 import androidx.tvprovider.media.tv.TvContractCompat
 import android.util.Log
-import com.github.kittinunf.fuel.core.Request
+import com.github.kittinunf.fuel.core.requests.CancellableRequest
 import com.wdullaer.vplayer.*
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -101,7 +101,7 @@ class ChannelService : JobService() {
 }
 
 class ChannelProgramService : JobService() {
-    private var runningRequest: Request? = null
+    private var runningRequest: CancellableRequest? = null
 
     override fun onStartJob(params: JobParameters): Boolean {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return false

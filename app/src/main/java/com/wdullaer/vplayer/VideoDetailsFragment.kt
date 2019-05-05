@@ -60,7 +60,7 @@ class VideoDetailsFragment : DetailsSupportFragment() {
 
         setOnItemViewClickedListener { itemViewHolder, item, _, _ ->
             if (item is Video) {
-                Log.d(TAG, "Item: " + item.toString())
+                Log.d(TAG, "Item: $item")
                 activity.startDetailsActivity(
                         item,
                         (itemViewHolder?.view as ImageCardView).mainImageView
@@ -167,7 +167,7 @@ class VideoDetailsFragment : DetailsSupportFragment() {
     }
 
     private fun setupDetailsOverviewRow(context: Context, arrayAdapter : ArrayObjectAdapter) {
-        Log.d(TAG, "doInBackground: " + selectedVideo.toString())
+        Log.d(TAG, "doInBackground: $selectedVideo")
         val row = DetailsOverviewRow(selectedVideo)
         row.imageDrawable = ContextCompat.getDrawable(context, R.drawable.default_background)
         val width = context.resources.getDimensionPixelSize(R.dimen.details_thumb_width)
@@ -311,14 +311,14 @@ class VideoDetailsFragment : DetailsSupportFragment() {
             imageView.layoutParams = ViewGroup.MarginLayoutParams(width, height)
             imageView.scaleType = ImageView.ScaleType.CENTER_CROP
 
-            return DetailsOverviewLogoPresenter.ViewHolder(imageView)
+            return ViewHolder(imageView)
         }
 
         override fun onBindViewHolder(viewHolder: Presenter.ViewHolder, item: Any) {
             val row = item as DetailsOverviewRow
             val imageView = viewHolder.view as ImageView
             imageView.setImageDrawable(row.imageDrawable)
-            if (isBoundToImage(viewHolder as DetailsOverviewLogoPresenter.ViewHolder, row)) {
+            if (isBoundToImage(viewHolder as ViewHolder, row)) {
 
                 viewHolder.parentPresenter.notifyOnBindLogo(viewHolder.parentViewHolder)
             }

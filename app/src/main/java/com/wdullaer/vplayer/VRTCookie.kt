@@ -9,8 +9,9 @@
 package com.wdullaer.vplayer
 
 import android.util.Log
-import com.github.kittinunf.fuel.android.extension.responseJson
+import com.github.kittinunf.fuel.core.extensions.cUrlString
 import com.github.kittinunf.fuel.httpPost
+import com.github.kittinunf.fuel.json.responseJson
 import com.github.kittinunf.result.Result
 import org.json.JSONObject
 
@@ -57,7 +58,7 @@ fun refreshVrtCookie (username : String, password : String, callback : (Exceptio
                                 .response { request, response, result2 ->
                                     when (result2) {
                                         is Result.Success -> {
-                                            val output = createCookieString(response.headers["Set-Cookie"].orEmpty())
+                                            val output = createCookieString(response.headers["Set-Cookie"])
                                             callback(null, output)
                                         }
                                         is Result.Failure -> {
@@ -78,7 +79,7 @@ fun refreshVrtCookie (username : String, password : String, callback : (Exceptio
             }
 }
 
-private fun createCookieString(cookies : List<String>) : String {
+private fun createCookieString(cookies : Collection<String>) : String {
     return cookies.asSequence().map {cookie ->
         cookie
                 .split(";")
@@ -88,6 +89,5 @@ private fun createCookieString(cookies : List<String>) : String {
                 .filterNot { it.startsWith("Expires") }
                 .filterNot { it.startsWith("HttpOnly") }
                 .filterNot { it.startsWith("Domain") }
-                .toList()
     }.reduce { acc, list -> acc + list }.joinToString(";")
 }

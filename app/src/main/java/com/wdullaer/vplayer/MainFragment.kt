@@ -66,7 +66,7 @@ class MainFragment : BrowseSupportFragment() {
 
     override fun onDestroy() {
         super.onDestroy()
-        Log.d(TAG, "onDestroy: " + mBackgroundTimer.toString())
+        Log.d(TAG, "onDestroy: $mBackgroundTimer")
         mBackgroundTimer.cancel()
     }
 
@@ -80,7 +80,7 @@ class MainFragment : BrowseSupportFragment() {
     private fun setupUIElements(context: Context) {
         title = getString(R.string.browse_title)
         // over title
-        headersState = BrowseSupportFragment.HEADERS_ENABLED
+        headersState = HEADERS_ENABLED
         isHeadersTransitionOnBackEnabled = true
 
         // set fastLane (or headers) background color
@@ -148,7 +148,7 @@ class MainFragment : BrowseSupportFragment() {
                 }
                 Toast.makeText(activity, resId, Toast.LENGTH_LONG).show()
             }
-            if (!categories.isEmpty()) {
+            if (categories.isNotEmpty()) {
                 val categoryHeader = HeaderItem(997L, "Categories")
                 val categoryRowAdapter = ArrayObjectAdapter(cardPresenter)
                 categoryRowAdapter.addAll(0, categories)
@@ -275,7 +275,7 @@ class MainFragment : BrowseSupportFragment() {
         private var sDefaultTextColor: Int by Delegates.notNull()
         private var sSelectedTextColor: Int by Delegates.notNull()
 
-        override fun onCreateViewHolder(parent: ViewGroup): Presenter.ViewHolder {
+        override fun onCreateViewHolder(parent: ViewGroup): ViewHolder {
             sDefaultBackgroundColor = ContextCompat.getColor(parent.context, R.color.default_background)
             sSelectedBackgroundColor =
                     ContextCompat.getColor(parent.context, R.color.selected_background)
@@ -298,17 +298,17 @@ class MainFragment : BrowseSupportFragment() {
             view.setMainImageDimensions(width, width)
             view.setMainImageScaleType(ImageView.ScaleType.FIT_CENTER)
             updateCardBackgroundColor(view, false)
-            return Presenter.ViewHolder(view)
+            return ViewHolder(view)
         }
 
-        override fun onBindViewHolder(viewHolder: Presenter.ViewHolder, item: Any) {
+        override fun onBindViewHolder(viewHolder: ViewHolder, item: Any) {
             val card = viewHolder.view as ImageCardView
             card.titleText = (item as MenuCard).label
             card.contentText = item.description
             card.mainImage = requireContext().getDrawable(item.imageRes)
         }
 
-        override fun onUnbindViewHolder(viewHolder: Presenter.ViewHolder) {
+        override fun onUnbindViewHolder(viewHolder: ViewHolder) {
             Log.d(TAG, "onUnbindViewHolder")
             val cardView = viewHolder.view as ImageCardView
             // Remove references to images so that the garbage collector can free up memory

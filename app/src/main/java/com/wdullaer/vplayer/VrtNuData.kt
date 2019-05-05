@@ -9,10 +9,10 @@
 package com.wdullaer.vplayer
 
 import android.util.Log
-import com.github.kittinunf.fuel.android.extension.responseJson
-import com.github.kittinunf.fuel.core.Request
+import com.github.kittinunf.fuel.core.requests.CancellableRequest
 import com.github.kittinunf.fuel.httpGet
 import com.github.kittinunf.fuel.httpPost
+import com.github.kittinunf.fuel.json.responseJson
 import com.github.kittinunf.result.Result
 import org.json.JSONObject
 import org.jsoup.Jsoup
@@ -46,7 +46,7 @@ val LIVE_PLAYLIST = listOf(
         LiveVideo(title = "Sporza", cardImageRes = R.drawable.card_live_sporza, vualtoUrl = "https://media-services-public.vrt.be/vualto-video-aggregator-web/rest/external/v1/videos/vualto_sporza_geo")
 )
 
-fun getLandingPage(defaultTitle: String, callback : (Exception?, List<Playlist>) -> Unit): Request {
+fun getLandingPage(defaultTitle: String, callback : (Exception?, List<Playlist>) -> Unit): CancellableRequest {
     fun parseLists(doc : Element) : Playlist {
         val title = doc.select("h2").first()?.text()?.trim()?.capitalize()
         val data = doc.select("li").map { parseVideo(it) }
@@ -252,7 +252,7 @@ fun getVideoUrl(video: Playable, cookie: String, callback: (Exception?, String?,
     }
 }
 
-fun getRecommendations(callback: (Exception?, Playlist) -> Unit): Request {
+fun getRecommendations(callback: (Exception?, Playlist) -> Unit): CancellableRequest {
     // The VRTNU landingpage kind of acts as a recommendation service
     // We'll return the first 2 lists of whatever is on the landingpage
     return getLandingPage("Recommendations") { error, playlists ->

@@ -16,14 +16,14 @@ import android.preference.PreferenceManager
 import androidx.recommendation.app.ContentRecommendation
 import android.util.Log
 import com.bumptech.glide.Glide
-import com.github.kittinunf.fuel.core.Request
+import com.github.kittinunf.fuel.core.requests.CancellableRequest
 import com.wdullaer.vplayer.R
 import com.wdullaer.vplayer.getDetailsIntent
 import com.wdullaer.vplayer.getRecommendations
 
 class RecommendationService : JobService() {
     private lateinit var notifManager : NotificationManager
-    private var runningRequest : Request? = null
+    private var runningRequest : CancellableRequest? = null
 
     override fun onCreate() {
         super.onCreate()
