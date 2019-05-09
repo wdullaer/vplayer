@@ -88,7 +88,7 @@ fun getCategories(callback : (Exception?, List<Category>) -> Unit) {
                 try {
                     Jsoup
                             .parse(result.get())
-                            .select("li.vrtlist__item--grid")
+                            .select("div.page-category")
                             .map(::parseCategory)
                 } catch (e : Exception) {
                     Log.e("getCategories", "Failed to parse categories HTML")
@@ -387,35 +387,30 @@ fun enrichLiveVideo (video : LiveVideo, cookie : String, callback : (error : Exc
 
 private fun parseCategory (doc : Element) : Category {
     return Category(
-            name = doc.select("h2.tile__title").first().text(),
-            cardImageUrl = parseSrcSet(doc.select("div.tile__image").first().select("img").first().attr("srcset")),
-            link = toAbsoluteUrl(doc.select("a.tile--category").first().attr("href"))
+            name = doc.select("h3.title").first().text(),
+            cardImageUrl = doc.select("img.media").first()?.attr("data-responsive-image")?.ensurePrefix("https:"),
+            link = toAbsoluteUrl(doc.select("a.nui-tile").first().attr("href"))
     )
 }
 
 private fun parseVideo (doc : Element, category : String = "") : Video {
     fun getDescription (input : Element) : String {
-        var description = input.select("div.tile__description").first()?.children()?.first()?.text()
-        description = description ?: input.select("div.tile__description").first()?.text()
-        description = description ?: input.select("div.tile__subtitle").first()?.text()
+        val description = input.select("div.description").first()?.text()
         return description ?: ""
     }
 
     fun getCardImageUrl (input : Element) : String? {
-        var imageUrl = parseSrcSet(input.select("div.tile__image").first()?.select("img")?.first()?.attr("srcset"))
-        imageUrl = imageUrl ?: getBackgroundImage(input.select("div.tile__image").first()?.attr("style"))
-        imageUrl = imageUrl ?: input.select("div.tile__image").first()?.attr("data-responsive-image")?.ensurePrefix("https:")
-        return imageUrl
+        return input.select("img.media").first()?.attr("data-responsive-image")?.ensurePrefix("https:")
     }
 
     return Video(
             id = UUID.randomUUID().mostSignificantBits,
-            title = doc.select("h3.tile__title").first().text(),
+            title = doc.select("h3.title").first()?.text() ?: "Default title",
             description = getDescription(doc),
             shortDescription = getDescription(doc),
             cardImageUrl = getCardImageUrl(doc),
             category = category,
-            detailsUrl = toAbsoluteUrl(doc.select("a.tile")?.first()?.attr("href"))
+            detailsUrl = toAbsoluteUrl(doc.select("a.nui-tile")?.first()?.attr("href"))
     )
 }
 
@@ -466,16 +461,6 @@ private fun contentJsonToVideo (json : JSONObject) : Video {
     )
 }
 
-private fun parseSrcSet(srcSet : String?) : String? {
-    if (srcSet == null) return null
-    val imageUrl = srcSet
-            .split(',')
-            .first { it.endsWith("2x") }
-            .dropLast(2)
-            .trim()
-    return toAbsoluteUrl(imageUrl)
-}
-
 private fun getContentsLink(link : String) : String {
     return (if (link.last() == '/') link.dropLast(1) else link).plus(".content.json")
 }
@@ -501,23 +486,3 @@ private fun toAbsoluteUrl(url : String?) : String {
     }
 }
 
-/**
- * Simple function which extracts the value of `background-image` in a css style attribute
- * Returns null if the input is null or no `background-image` property is found.
- * It assumes that the value is wrapped in `url()` and will remove those
- *
- * @param css A string containing a css style attribute
- * @returns The value of the `background-image` attribute (stripped of `url()`) or null if no such
- *          attribute could be found
- */
-private fun getBackgroundImage(css : String?) : String? {
-    Log.i("getBackgroundImage", css)
-    return css?.split(";")
-            ?.asSequence()
-            ?.map { it.trim() }
-            ?.firstOrNull { it.startsWith("background-image") }
-            ?.removePrefix("background-image:")
-            ?.trim()
-            ?.drop(5)
-            ?.dropLast(2)
-}
