@@ -410,7 +410,7 @@ private fun parseVideo (doc : Element, category : String = "") : Video {
             shortDescription = getDescription(doc),
             cardImageUrl = getCardImageUrl(doc),
             category = category,
-            detailsUrl = toAbsoluteUrl(doc.select("a.nui-tile")?.first()?.attr("href"))
+            detailsUrl = toAbsoluteUrl(doc.select("nui-tile")?.first()?.attr("href"))
     )
 }
 
