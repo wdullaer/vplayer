@@ -72,7 +72,7 @@ class VideoDetailsFragment : DetailsSupportFragment() {
 
         // We were started by the global search
         if (Intent.ACTION_VIEW.equals(activity.intent.action, true)) {
-            getVideoByPubId(activity.intent.data.lastPathSegment) { err, video ->
+            getVideoByPubId(activity.intent.data?.lastPathSegment ?: "") { err, video ->
                 err?.let {
                     // TODO: distinguish between network and parsing error
                     Toast.makeText(activity, R.string.video_error_server_inaccessible, Toast.LENGTH_LONG).show()
@@ -82,7 +82,7 @@ class VideoDetailsFragment : DetailsSupportFragment() {
             }
         // We were started from within the application
         } else {
-            Log.i("DetailsFragment", activity.intent.extras.toString())
+            Log.i("DetailsFragment", activity.intent.extras?.toString())
             selectedVideo = activity.intent.getParcelableExtra(DetailsActivity.VIDEO) as Video
             init(activity, false)
         }
@@ -105,7 +105,7 @@ class VideoDetailsFragment : DetailsSupportFragment() {
         adapter = arrayAdapter
 
         val cookie = activity.getSharedPreferences(VPLAYER_PREFERENCE_ROOT, Context.MODE_PRIVATE)
-                .getString(activity.getString(R.string.pref_cookie_key), "")
+                .getString(activity.getString(R.string.pref_cookie_key), "") ?: ""
         // This is explicitly side effecty to avoid flickering (but we should test if we can get
         // away with replacing the video)
         enrichVideo(selectedVideo, cookie) {

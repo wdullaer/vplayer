@@ -259,13 +259,13 @@ class MainFragment : BrowseSupportFragment() {
             context.resources.getString(R.string.default_account_name)
         } else {
             context.getSharedPreferences(VPLAYER_PREFERENCE_ROOT, Context.MODE_PRIVATE)
-                    .getString(context.resources.getString(R.string.pref_username_key), "")
+                    .getString(context.resources.getString(R.string.pref_username_key), "") ?: ""
         }
     }
 
     private fun getCookie(context : Context) : String {
         return context.getSharedPreferences(VPLAYER_PREFERENCE_ROOT, Context.MODE_PRIVATE)
-                .getString(context.resources.getString(R.string.pref_cookie_key), "")
+                .getString(context.resources.getString(R.string.pref_cookie_key), "") ?: ""
     }
 
     private inner class GridItemPresenter : Presenter() {

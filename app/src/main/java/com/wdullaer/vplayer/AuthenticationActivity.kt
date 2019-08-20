@@ -57,11 +57,11 @@ class FirstStepFragment : GuidedStepSupportFragment() {
     override fun onCreateActions(actions: MutableList<GuidedAction>, savedInstanceState: Bundle?) {
         val context = requireContext()
         val defaultUsername = context.getSharedPreferences(VPLAYER_PREFERENCE_ROOT, Context.MODE_PRIVATE)
-                .getString(context.getString(R.string.pref_username_key), "")
+                .getString(context.getString(R.string.pref_username_key), "") ?: ""
         val defaultPassword = context.getSharedPreferences(VPLAYER_PREFERENCE_ROOT, Context.MODE_PRIVATE)
-                .getString(context.getString(R.string.pref_password_key), "")
+                .getString(context.getString(R.string.pref_password_key), "") ?: ""
         val cookie = context.getSharedPreferences(VPLAYER_PREFERENCE_ROOT, Context.MODE_PRIVATE)
-                .getString(context.getString(R.string.pref_cookie_key), "")
+                .getString(context.getString(R.string.pref_cookie_key), "") ?: ""
         Log.i("AuthenticationActivity", defaultUsername)
         Log.i("AuthenticationActivity", defaultPassword.length.toString())
 
