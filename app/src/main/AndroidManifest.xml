@@ -21,7 +21,8 @@
 
     <application
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@drawable/vplayer_banner_scaled"
+        android:banner="@drawable/vplayer_banner_scaled"
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
@@ -29,8 +30,6 @@
         tools:ignore="GoogleAppIndexingWarning">
         <activity
             android:name="com.wdullaer.vplayer.MainActivity"
-            android:banner="@drawable/vplayer_banner"
-            android:icon="@drawable/vplayer_banner"
             android:label="@string/app_name"
             android:logo="@drawable/vplayer_banner"
             android:screenOrientation="landscape">
