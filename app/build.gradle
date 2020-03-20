@@ -40,7 +40,7 @@ dependencies {
     implementation 'androidx.tvprovider:tvprovider:1.0.0'
     implementation 'com.github.bumptech.glide:glide:4.9.0'
 
-    implementation 'org.jsoup:jsoup:1.12.2'
+    implementation 'org.jsoup:jsoup:1.13.1'
     implementation 'com.github.kittinunf.fuel:fuel-android:2.2.0'
     implementation 'com.github.kittinunf.fuel:fuel-json:2.2.0'
     implementation 'com.google.android.exoplayer:exoplayer-core:2.11.3'
