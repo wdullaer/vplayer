@@ -45,6 +45,6 @@ dependencies {
     implementation 'com.github.kittinunf.fuel:fuel-json:2.2.0'
     implementation 'com.google.android.exoplayer:exoplayer-core:2.11.4'
     implementation 'com.google.android.exoplayer:exoplayer-dash:2.11.4'
-    implementation 'com.google.android.exoplayer:exoplayer-ui:2.11.4'
+    implementation 'com.google.android.exoplayer:exoplayer-ui:2.13.0'
     implementation 'com.google.android.exoplayer:extension-leanback:2.11.4'
 }
